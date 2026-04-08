@@ -32,6 +32,8 @@ python main.py
 - `core/response_utils.py` - Output normalization, JSON extraction, schema validation.
 - `core/ROUGE_scores.py` - Unified ROUGE scoring utilities.
 - `core/aligned_single_case_demo.py` - Single-case aligned demo.
+- `core/generated_case_pipeline_demo.py` - Generated red-team case + project-aligned audit demo.
+- `core/async_tri_agent_demo.py` - Async tri-agent (generate/audit/judge) pipeline demo.
 - `payloads/email_scenarios.json` - Batch test cases.
 - `reports/evaluation_results.json` - Generated evaluation report.
 
@@ -86,6 +88,66 @@ This script demonstrates two aligned PoCs:
 - Benign project email
 
 Both use the same parsing/validation/scoring pipeline as `main.py`.
+
+## Run Generated-Case Demo
+
+```bash
+python core/generated_case_pipeline_demo.py
+```
+
+This demo:
+
+- Generates one controlled phishing-style sample for security testing.
+- Sends that sample through `SentinelTester` (same audit path as the project).
+- Parses and validates output with the existing schema:
+  - `is_inclusive`
+  - `reasoning`
+  - `security_status`
+- Appends generated cases into `payloads/email_scenarios.json`.
+
+### Generated-Case CLI Options
+
+```bash
+python core/generated_case_pipeline_demo.py \
+  --count 3 \
+  --generator-model gemma4:latest \
+  --target-model gemma4:latest \
+  --payload-path payloads/email_scenarios.json
+```
+
+- `--count`: Number of generated test cases (minimum effective value is 1).
+- `--generator-model`: Model for phishing-style sample generation.
+- `--target-model`: Model used by `SentinelTester` for audit.
+- `--payload-path`: JSON payload file to append generated cases.
+
+## Run Tests
+
+```bash
+python -m unittest tests/test_generated_case_pipeline_demo.py
+python -m unittest tests/test_async_tri_agent_demo.py
+```
+
+## Run Async Tri-Agent Demo
+
+```bash
+python core/async_tri_agent_demo.py \
+  --count 5 \
+  --concurrency 2 \
+  --generator-model gemma4:latest \
+  --auditor-model llama3.1:latest \
+  --judge-model gemma4:latest
+```
+
+This demo runs a 3-step async workflow:
+
+- Generate phishing-style simulation text (for security testing).
+- Audit with project-aligned schema (`is_inclusive`, `reasoning`, `security_status`).
+- Judge audit quality (`score`, `reason`).
+
+Reports are written to:
+
+- `reports/async_runs/*.jsonl`
+- `reports/async_latest.jsonl`
 
 ## Test Case Format
 
