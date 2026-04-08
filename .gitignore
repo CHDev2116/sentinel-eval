@@ -1,0 +1,25 @@
+# Logs and Results
+logs/
+*.log
+results/
+# Generated evaluation outputs (auto-created by main.py)
+reports/*.pdf
+reports/*.json
+
+# Credentials & Secrets
+.env
+secret.json
+*.pem
+*.key
+
+# Environments
+.venv/
+node_modules/
+__pycache__/
+
+# VS Code / Cursor workspace files
+.vscode/*
+!.vscode/settings.json
+!.vscode/zsh/
+!.vscode/zsh/.zshrc
+.vscode/zsh/.zsh_history

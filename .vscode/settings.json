@@ -1,0 +1,17 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "terminal.integrated.defaultProfile.osx": "zsh (project venv)",
+  "terminal.integrated.profiles.osx": {
+    "zsh (project venv)": {
+      "path": "/bin/zsh",
+      "args": ["-i"]
+    }
+  },
+  "terminal.integrated.env.osx": {
+    "ZDOTDIR": "${workspaceFolder}/.vscode/zsh",
+    "VIRTUAL_ENV": "${workspaceFolder}/.venv",
+    "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
+  },
+  "terminal.integrated.enablePersistentSessions": false
+}
