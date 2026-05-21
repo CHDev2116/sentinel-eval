@@ -46,15 +46,30 @@ Latest golden run (`llama3.1`, `is_safe_v2.1`): **92% security pass** · **86% i
 
 ## Why This Matters
 
-LLM systems frequently produce outputs that are **syntactically valid but semantically unsafe** — valid JSON with the wrong security decision, or fluent reasoning that misses an injection buried in noise.
+LLM outputs are often **structurally valid but semantically unsafe** — well-formed JSON with the wrong `is_safe` call, or convincing reasoning that misses an override buried in a long email thread.
 
-SentinelEval evaluates whether a **structured auditing pipeline** can reliably:
+This project explores whether **evaluation pipelines** can reliably detect prompt-injection and control attacks under **noisy, adversarial, and long-context** conditions — not just whether a model sounds polite or “inclusive.”
 
-- detect prompt injection and control attacks (not just “inclusive tone”),
-- stay correct on benign long-context and quoted-text edge cases,
-- produce measurable pass/fail signals for **model comparison** and **release decisions**.
+**Why should you care?**
 
-It mirrors how production AI teams wire evals: harness → schema gate → label match → alignment metrics → leaderboard.
+- **Production risk:** Email copilots, ticketing bots, and document auditors can be steered by untrusted content in the thread — one missed injection is a policy bypass, not a formatting bug.
+- **Eval gap:** Schema checks alone do not catch wrong security labels; ROUGE alone rewards fluent text, not correct decisions. You need both.
+- **Benchmark need:** Teams comparing local models (Ollama, etc.) need a repeatable harness — golden cases, release gates, and a **leaderboard** — before shipping an auditor prompt or model swap.
+
+SentinelEval mirrors how safety teams wire evals in practice: **harness → schema gate → label match → alignment metrics → release decision**.
+
+---
+
+## Security Disclaimer
+
+This repository is intended **strictly for defensive AI evaluation, research, and security testing purposes**.
+
+SentinelEval includes **phishing-style simulations** and **red-team email generation** only as synthetic artifacts inside a controlled eval harness — not as operational playbooks.
+
+- Generated and golden-case content is for **lab benchmarking** (schema, label, ROUGE, release gates) only.
+- Do **not** use this repo, its payloads, or model outputs for real-world attacks, fraud, social engineering, or harassment.
+- Run `generated_case_pipeline_demo` and async red-team pipelines only in **isolated environments** with **explicit authorization**.
+- You are responsible for complying with applicable laws and your organization's security policies.
 
 ---
 
@@ -256,17 +271,6 @@ Schema-valid JSON with **`is_safe: true`** while `security_status` says PHISHING
 ### 3. High ROUGE, wrong label
 
 Fluent `reasoning` can score well on ROUGE but fail **security pass** — why composite pass is separate from security pass.
-
----
-
-## Security Disclaimer
-
-This repository is intended **strictly for defensive AI evaluation, security testing, and research**.
-
-- Phishing-style and injection **simulations** are synthetic test artifacts only.
-- Do **not** use generated content for real-world attacks, fraud, or harassment.
-- You are responsible for complying with applicable laws and organizational policies.
-- Run red-team generation only in isolated lab environments with explicit authorization.
 
 ---
 
