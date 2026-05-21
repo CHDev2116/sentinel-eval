@@ -1,12 +1,16 @@
 import argparse
 import json
 import os
+import sys
 
 from core.eval_runner import (
     GOLDEN_PAYLOAD,
+    RELEASE_ROUGE_L_THRESHOLD,
     evaluate_case,
+    evaluate_release_gate,
     load_payload_cases,
     print_metrics_summary,
+    print_release_gate_report,
     write_run_report,
 )
 from core.logic_isolation_test import DEFAULT_MODEL, SentinelTester
@@ -61,6 +65,14 @@ def parse_args():
         action="store_true",
         help="Print only case id + summary lines.",
     )
+    parser.add_argument(
+        "--release-gate",
+        action="store_true",
+        help=(
+            "After run, enforce suite-level gates (golden scored cases) and "
+            f"use ROUGE-L threshold {RELEASE_ROUGE_L_THRESHOLD}."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -92,6 +104,9 @@ def main():
 
     run_count = resolve_limit(args, total_cases)
     scenarios = all_scenarios[:run_count]
+    rouge_threshold = (
+        RELEASE_ROUGE_L_THRESHOLD if args.release_gate else args.rouge_l_threshold
+    )
 
     if args.all:
         limit_note = ""
@@ -114,9 +129,7 @@ def main():
         if not args.quiet:
             print(f"\n[Running {case['case_id']}] - {case['description']}")
 
-        result = evaluate_case(
-            case, tester, rouge_l_threshold=args.rouge_l_threshold
-        )
+        result = evaluate_case(case, tester, rouge_l_threshold=rouge_threshold)
         results.append(result)
 
         if not args.quiet:
@@ -158,6 +171,12 @@ def main():
     print_metrics_summary(metrics, model_name)
     print(f"\n🧾 Run report: {report_path}")
     print(f"✅ Completed {run_count} case(s).")
+
+    if args.release_gate:
+        passed, failures = evaluate_release_gate(metrics, results)
+        print_release_gate_report(passed, failures)
+        if not passed:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

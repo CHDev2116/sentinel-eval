@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.eval_runner import aggregate_metrics
+from core.eval_runner import aggregate_metrics, evaluate_release_gate, print_release_gate_report
 
 
 def load_report(path):
@@ -30,6 +30,11 @@ def main():
     )
     parser.add_argument("--markdown", action="store_true", help="Print markdown table row.")
     parser.add_argument("--tags", action="store_true", help="Print per-tag breakdown.")
+    parser.add_argument(
+        "--release-gate",
+        action="store_true",
+        help="Evaluate README suite-level release gates on golden scored cases.",
+    )
     args = parser.parse_args()
 
     meta, results = load_report(args.report)
@@ -61,6 +66,12 @@ def main():
         print("  by_tag:")
         for tag, m in metrics["by_tag"].items():
             print(f"    {tag}: {m}")
+
+    if args.release_gate:
+        passed, failures = evaluate_release_gate(metrics, results)
+        print_release_gate_report(passed, failures)
+        if not passed:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

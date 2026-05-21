@@ -320,7 +320,7 @@ python scripts/summarize_run.py --tags                # per-tag breakdown
 ollama stop llama3.1:latest                             # cool down GPU
 ```
 
-CLI flags: `--all`, `--tags`, `--include-generated`, `--limit N`, `--model`, `--rouge-l-threshold`, `--quiet`.
+CLI flags: `--all`, `--tags`, `--include-generated`, `--limit N`, `--model`, `--rouge-l-threshold`, `--release-gate`, `--quiet`.
 
 Per case (unless `--quiet`): raw response → parsed JSON → schema validation → ROUGE → label match. Writes `reports/evaluation_results.json`.
 
@@ -384,7 +384,8 @@ python -m unittest discover -s tests -p "test_*.py"
 |--------|---------|
 | `schema_validation.is_valid = false` | Output failed required schema |
 | `prediction_match = false` | `is_safe` disagrees with `expected_is_safe` |
-| `composite_pass = false` | Failed schema, label, or ROUGE-L threshold |
+| `security_pass = false` | Schema invalid or `is_safe` label mismatch |
+| `composite_pass = false` | Security pass failed or ROUGE-L below threshold |
 | `meta.metrics.benign_specificity_pct` | How often benign threads stay `is_safe=true` |
 
 ### Common Issues
