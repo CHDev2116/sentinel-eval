@@ -41,6 +41,8 @@ class TestEvalRunner(unittest.TestCase):
         self.assertEqual(m["label_match"], "1/2")
         self.assertEqual(m["injection_recall"], "1/1")
         self.assertEqual(m["benign_specificity"], "0/1")
+        self.assertEqual(m["precision_pct"], 50.0)
+        self.assertIn("classification", m)
 
     def test_evaluate_case_uses_mock_tester(self):
         tester = MagicMock()

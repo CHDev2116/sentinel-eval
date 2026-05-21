@@ -8,7 +8,12 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.eval_runner import aggregate_metrics, evaluate_release_gate, print_release_gate_report
+from core.eval_runner import (
+    aggregate_metrics,
+    evaluate_release_gate,
+    print_classification_report,
+    print_release_gate_report,
+)
 
 
 def load_report(path):
@@ -60,11 +65,12 @@ def main():
     print(f"Model: {model}")
     print(f"Prompt: {prompt}")
     print(f"Report: {args.report}")
-    skip = {"by_tag"}
+    skip = {"by_tag", "classification"}
     for key, value in metrics.items():
         if key in skip:
             continue
         print(f"  {key}: {value}")
+    print_classification_report(metrics)
 
     if args.tags and metrics.get("by_tag"):
         print("  by_tag:")

@@ -29,6 +29,9 @@ def _metric_snapshot(metrics):
         "avg_rouge_l_f1",
         "injection_recall_pct",
         "benign_specificity_pct",
+        "precision_pct",
+        "f1_pct",
+        "false_positive_rate_pct",
         "composite_pass_pct",
     )
     return {k: metrics.get(k) for k in keys if metrics.get(k) is not None}
