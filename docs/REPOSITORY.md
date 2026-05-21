@@ -22,12 +22,21 @@ git remote set-url origin git@github.com:CHDev2116/sentinel-eval.git
 
 GitHub will redirect `red_team_project` → `sentinel-eval` for clones and old links. Update README badges and any external links after rename.
 
-## Local folder name (optional)
+## Local folder name
 
-Your checkout path can stay `red_team_project`; only the **GitHub slug** needs to change for a sharp public URL.
+Recommended checkout path: **`sentinel-eval`** (matches the GitHub repo slug).
+
+```bash
+cd /path/to/public_repos
+git clone git@github.com:CHDev2116/sentinel-eval.git
+cd sentinel-eval
+```
+
+If you still have an old `red_team_project` folder:
 
 ```bash
 cd ..
 mv red_team_project sentinel-eval
 cd sentinel-eval
+git remote set-url origin git@github.com:CHDev2116/sentinel-eval.git
 ```
