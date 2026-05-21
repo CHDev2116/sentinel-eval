@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sentinel-eval"
-version = "0.7.0"
+version = "0.10.0"
 description = "Benchmark local LLMs on prompt-injection detection via Ollama"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -28,7 +28,7 @@ dev = [
 ]
 
 [project.scripts]
-sentinel-eval = "sentinel_eval.cli.main:main"
+sentinel-eval = "sentinel_eval.cli.main:app"
 sentinel-leaderboard = "sentinel_eval.cli.leaderboard:main"
 sentinel-summarize = "sentinel_eval.cli.summarize:main"
 

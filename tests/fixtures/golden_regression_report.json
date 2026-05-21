@@ -2,7 +2,7 @@
   "meta": {
     "model": "regression-fixture",
     "prompt_version": "is_safe_v2.2",
-    "payload": "payloads/scenarios_golden.json",
+    "payload": "v2",
     "full_suite": true,
     "metrics": {}
   },

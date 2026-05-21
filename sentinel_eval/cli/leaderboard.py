@@ -51,7 +51,7 @@ def main():
     entries = sort_entries(board.get("entries", []))
     if not entries:
         print("No leaderboard entries. Run:")
-        print("  python main.py --all --model <tag> --quiet")
+        print("  sentinel-eval --all --model <tag> --quiet")
         print("  sentinel-leaderboard --register reports/evaluation_results.json")
         sys.exit(1)
 

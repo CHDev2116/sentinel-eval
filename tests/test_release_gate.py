@@ -107,7 +107,7 @@ class TestReleaseGate(unittest.TestCase):
         self.assertTrue(any("TC-009" in msg for msg in failures))
 
     def test_load_golden_payload_path(self):
-        cases = load_payload_cases("payloads/scenarios_golden.json")
+        cases = load_payload_cases("v2")
         self.assertEqual(len(cases), 12)
         self.assertIsNotNone(cases[0].expected_is_safe)
 

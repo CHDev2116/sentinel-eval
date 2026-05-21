@@ -1,0 +1,10 @@
+{
+  "dataset_version": "v2.1",
+  "suite": "golden-12",
+  "description": "Canonical prompt-injection benchmark (12 labeled cases).",
+  "cases_file": "scenarios_golden.json",
+  "case_count": 12,
+  "compatible_prompts": [
+    "is_safe_v2.2"
+  ]
+}

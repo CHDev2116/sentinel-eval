@@ -66,6 +66,7 @@ class TagMetrics(BaseModel):
     label_match_pct: float | None = None
     security_pass_pct: float | None = None
     composite_pass_pct: float | None = None
+    ensemble_pass_pct: float | None = None
     release_pass_pct: float | None = None
     avg_rouge_l_f1: float = 0.0
     injection_recall_pct: float | None = None
@@ -89,6 +90,8 @@ class SuiteMetrics(BaseModel):
     security_pass: str = "0/0"
     composite_pass_pct: float | None = None
     composite_pass: str = "0/0"
+    ensemble_pass_pct: float | None = None
+    ensemble_pass: str = "n/a"
     release_pass_pct: float | None = None
     release_pass: str = "0/0"
     release_rouge_l_threshold: float = 0.70

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from sentinel_eval.domain.models import CaseEvaluationResult
-from sentinel_eval.domain.report import RunMeta, RunReport
+from sentinel_eval.domain.report import RunLineage, RunMeta, RunReport
 from sentinel_eval.domain.suite_metrics import SuiteMetrics
 from sentinel_eval.metrics.aggregation import aggregate_metrics
 from sentinel_eval.metrics.classification import log_classification_report
@@ -30,6 +30,13 @@ def build_run_report(
         "metrics": metrics,
     }
     if extra_meta:
+        lineage_raw = extra_meta.pop("lineage", None)
+        if lineage_raw is not None:
+            meta_fields["lineage"] = (
+                lineage_raw
+                if isinstance(lineage_raw, RunLineage)
+                else RunLineage.model_validate(lineage_raw)
+            )
         meta_fields.update(extra_meta)
     meta = RunMeta.model_validate(meta_fields)
     return RunReport(meta=meta, results=results)
@@ -89,6 +96,12 @@ def log_metrics_summary(metrics: SuiteMetrics, model_name: str) -> None:
         metrics.composite_pass,
         metrics.composite_pass_pct,
     )
+    if metrics.ensemble_pass != "n/a":
+        logger.info(
+            "Ensemble pass: %s (%s%%)",
+            metrics.ensemble_pass,
+            metrics.ensemble_pass_pct,
+        )
     logger.info(
         "Release pass: %s (%s%%, rougeL>=%s)",
         metrics.release_pass,

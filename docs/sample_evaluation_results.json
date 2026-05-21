@@ -3,7 +3,7 @@
     "model": "llama3.1:latest",
     "prompt_version": "is_safe_v2.2",
     "timestamp": "2026-05-21T13:53:28+00:00",
-    "payload": "payloads/scenarios_golden.json",
+    "payload": "v2",
     "full_suite": true,
     "metrics": {
       "cases_run": 12,

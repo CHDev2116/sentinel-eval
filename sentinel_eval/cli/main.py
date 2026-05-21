@@ -1,9 +1,11 @@
 import argparse
 import json
 import logging
-import sys
 
-from sentinel_eval.clients.ollama import DEFAULT_MODEL, SentinelTester
+from sentinel_eval.clients.lineage import build_lineage_fields
+from sentinel_eval.clients.ollama import DEFAULT_MODEL
+from sentinel_eval.clients.ollama_auditor import create_ollama_auditor
+from sentinel_eval.clients.protocol import ModelInferenceParams
 from sentinel_eval.config import get_settings
 from sentinel_eval.domain.models import CaseEvaluationResult
 from sentinel_eval.evaluators.case import evaluate_case
@@ -14,8 +16,15 @@ from sentinel_eval.metrics.release_gate import (
     log_advisory_gate_report,
     log_release_gate_report,
 )
+from sentinel_eval.mutations.engine import parse_mutation_kinds
+from sentinel_eval.prompts.registry import get_active_prompt, set_active_prompt
 from sentinel_eval.utils.logging_config import setup_logging
-from sentinel_eval.utils.payloads import GOLDEN_PAYLOAD, load_payload_cases
+from sentinel_eval.utils.payloads import (
+    GOLDEN_PAYLOAD,
+    load_dataset_manifest,
+    load_payload_cases,
+    resolve_payload_path,
+)
 from sentinel_eval.utils.reports import log_metrics_summary, write_run_report
 
 logger = logging.getLogger(__name__)
@@ -30,7 +39,7 @@ def parse_args():
     parser.add_argument(
         "--include-generated",
         action="store_true",
-        help="Also run payloads/scenarios_generated.json (experimental cases).",
+        help="Also merge payloads/generated/ (experimental cases).",
     )
     parser.add_argument(
         "--tags",
@@ -49,7 +58,13 @@ def parse_args():
         default=None,
         help=f"Ollama model tag (default: {DEFAULT_MODEL}).",
     )
-    parser.add_argument("--payload", default=GOLDEN_PAYLOAD, help="Path to test-case JSON.")
+    parser.add_argument(
+        "--payload",
+        default=GOLDEN_PAYLOAD,
+        help=(
+            "Dataset path or alias (v2, golden, generated, mutations, or path to cases JSON)."
+        ),
+    )
     parser.add_argument(
         "--rouge-l-threshold",
         type=float,
@@ -75,6 +90,56 @@ def parse_args():
         "--json-logs",
         action="store_true",
         help="Emit structured JSON log lines on stderr.",
+    )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Disable SQLite LLM response cache (default: cache on).",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=None,
+        help="Model temperature (Ollama options); recorded in run lineage.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Model seed (Ollama options); recorded in run lineage.",
+    )
+    parser.add_argument(
+        "--prompt",
+        default=None,
+        choices=["is_safe_v2.2", "is_safe_v3.0"],
+        help="Auditor prompt: v2.2 (classification+few-shot) or v3.0 (adversarial triage).",
+    )
+    parser.add_argument(
+        "--judge-ensemble",
+        action="store_true",
+        help="Post-audit weighted judge ensemble (hidden rubric).",
+    )
+    parser.add_argument(
+        "--judge-mode",
+        default="heuristic",
+        choices=["heuristic", "llm"],
+        help="Judge ensemble backend (llm = 3 extra Ollama calls per case).",
+    )
+    parser.add_argument(
+        "--mutate",
+        default=None,
+        metavar="KINDS",
+        help=(
+            "Comma-separated mutation kinds applied before audit: "
+            "unicode_homoglyph, markdown_nest, quoted_instruction, "
+            "multilingual_override, encoded_instruction, whitespace_smuggling."
+        ),
+    )
+    parser.add_argument(
+        "--mutate-seed",
+        type=int,
+        default=None,
+        help="RNG seed for mutation application order.",
     )
     return parser.parse_args()
 
@@ -124,11 +189,25 @@ def _log_case_verbose(result: CaseEvaluationResult) -> None:
         )
 
 
-def main():
+def main() -> int:
     args = parse_args()
     setup_logging(args.log_level or get_settings().log_level, json_logs=args.json_logs)
+    settings = get_settings()
+    if args.prompt:
+        set_active_prompt(args.prompt)
     model_name = args.model or DEFAULT_MODEL
-    tester = SentinelTester(model_name=model_name)
+    mutation_kinds = parse_mutation_kinds(args.mutate) if args.mutate else []
+    inference = ModelInferenceParams(
+        temperature=args.temperature
+        if args.temperature is not None
+        else settings.model_temperature,
+        seed=args.seed if args.seed is not None else settings.model_seed,
+    )
+    auditor = create_ollama_auditor(
+        model_name,
+        use_cache=not args.no_cache,
+        inference_params=inference,
+    )
     tag_filter = None
     if args.tags:
         tag_filter = [t.strip() for t in args.tags.split(",") if t.strip()]
@@ -141,7 +220,7 @@ def main():
     total_cases = len(scenarios)
     if total_cases == 0:
         logger.warning("No cases matched filters.")
-        return
+        return 0
 
     run_count = resolve_limit(args, total_cases)
     scenarios = scenarios[:run_count]
@@ -154,11 +233,19 @@ def main():
             if args.limit is None
             else f" ({run_count}/{total_cases})"
         )
+    prompt_meta = get_active_prompt()
+    dataset_manifest = load_dataset_manifest(resolve_payload_path(args.payload))
+    dataset_ver = (
+        dataset_manifest.dataset_version if dataset_manifest else prompt_meta.dataset_version
+    )
     logger.info(
-        "Batch model=%s prompt=%s cases=%s%s",
+        "Batch model=%s prompt=%s dataset=%s cases=%s judges=%s mutate=%s%s",
         model_name,
-        tester.prompt_version,
+        auditor.prompt_version,
+        dataset_ver,
         run_count,
+        args.judge_mode if args.judge_ensemble else "off",
+        mutation_kinds or "off",
         limit_note,
     )
 
@@ -166,13 +253,35 @@ def main():
     for case in scenarios:
         if not args.quiet:
             pass  # logged after evaluate
-        result = evaluate_case(case, tester, rouge_l_threshold=rouge_threshold)
+        result = evaluate_case(
+            case,
+            auditor,
+            rouge_l_threshold=rouge_threshold,
+            mutation_kinds=mutation_kinds or None,
+            mutation_seed=args.mutate_seed,
+            judge_ensemble=args.judge_ensemble,
+            judge_ensemble_mode=args.judge_mode,
+        )
         results.append(result)
         if args.quiet:
             _log_case_summary(result)
         else:
             _log_case_verbose(result)
 
+    cache = getattr(auditor, "response_cache", None)
+    cache_hits = cache.hits if cache else 0
+    cache_misses = cache.misses if cache else 0
+    lineage = build_lineage_fields(
+        payload_path=args.payload,
+        include_generated=args.include_generated,
+        inference=inference,
+        auditor_backend=getattr(auditor, "backend", "unknown"),
+        cache_enabled=not args.no_cache and settings.eval_cache_enabled,
+        cache_hits=cache_hits,
+        cache_misses=cache_misses,
+    )
+    lineage["judge_ensemble_mode"] = args.judge_mode if args.judge_ensemble else ""
+    lineage["mutation_kinds"] = mutation_kinds
     report_path, metrics = write_run_report(
         results,
         model_name=model_name,
@@ -181,6 +290,7 @@ def main():
         extra_meta={
             "include_generated": args.include_generated,
             "tag_filter": tag_filter,
+            "lineage": lineage,
         },
     )
     log_metrics_summary(metrics, model_name)
@@ -198,9 +308,16 @@ def main():
         log_advisory_gate_report(passed, failures)
         if not passed:
             exit_code = 1
+    return exit_code
+
+
+def app() -> int:
+    """Console entry point (setuptools: sentinel-eval)."""
+    exit_code = main()
     if exit_code:
-        sys.exit(exit_code)
+        raise SystemExit(exit_code)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

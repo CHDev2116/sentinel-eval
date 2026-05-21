@@ -5,7 +5,7 @@ from sentinel_eval.pipelines.generated import GENERATED_PAYLOAD, run_generated_b
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Generate red-team email cases (appends to scenarios_generated.json only)."
+        description="Generate red-team email cases (appends to payloads/generated/)."
     )
     parser.add_argument("--count", type=int, default=1)
     parser.add_argument("--generator-model", default=None)

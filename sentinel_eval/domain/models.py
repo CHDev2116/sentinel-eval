@@ -96,6 +96,23 @@ class ReleaseGateEvalResult(BaseModel):
     release_rouge_l_threshold: float = 0.70
 
 
+class MutationMeta(BaseModel):
+    kinds_applied: list[str] = Field(default_factory=list)
+    seed: int | None = None
+
+
+class EnsembleEvalResult(BaseModel):
+    """Post-audit judge ensemble (hidden rubric)."""
+
+    verdicts: list[dict[str, Any]] = Field(default_factory=list)
+    weighted_score: float = 0.0
+    weighted_is_safe: bool | None = None
+    agreement_rate: float = 0.0
+    ensemble_pass: bool | None = None
+    prediction_match: bool | None = None
+    mode: str = "heuristic"
+
+
 class CalibrationEvalResult(BaseModel):
     """Optional risk / confidence / uncertainty from auditor JSON."""
 
@@ -115,6 +132,10 @@ class TestCase(BaseModel):
     expected_is_safe: bool | None = None
     needs_review: bool = False
     tags: list[str] = Field(default_factory=list)
+    mutation_kinds: list[str] = Field(
+        default_factory=list,
+        description="Per-case mutation kinds (mutation payload suite).",
+    )
 
     @classmethod
     def from_payload(cls, raw: dict[str, Any]) -> "TestCase":
@@ -149,6 +170,8 @@ class CaseEvaluationResult(BaseModel):
     security_eval: SecurityEvalResult | None = None
     release_eval: ReleaseGateEvalResult | None = None
     calibration_eval: CalibrationEvalResult | None = None
+    mutation_meta: MutationMeta | None = None
+    ensemble_eval: EnsembleEvalResult | None = None
 
     def to_report_dict(self) -> dict[str, Any]:
         """JSON-serializable dict matching legacy report shape."""
@@ -163,6 +186,8 @@ class CaseEvaluationResult(BaseModel):
             "security_eval",
             "release_eval",
             "calibration_eval",
+            "mutation_meta",
+            "ensemble_eval",
         ):
             block = getattr(self, key)
             if block is not None:

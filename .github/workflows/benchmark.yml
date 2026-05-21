@@ -38,7 +38,7 @@ jobs:
       - name: Pull model
         run: ollama pull llama3.1:latest
       - name: Run golden benchmark
-        run: python main.py --all --quiet --model llama3.1:latest
+        run: sentinel-eval --all --quiet --model llama3.1:latest
       - name: Regression gate on live report
         run: python scripts/benchmark_gate.py --report reports/latest.json
       - uses: actions/upload-artifact@v4

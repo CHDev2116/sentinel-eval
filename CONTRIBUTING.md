@@ -17,6 +17,7 @@ ruff format --check sentinel_eval tests examples scripts
 black --check sentinel_eval tests examples scripts
 mypy sentinel_eval
 pytest
+sentinel-eval --all --quiet
 python scripts/benchmark_gate.py
 ```
 

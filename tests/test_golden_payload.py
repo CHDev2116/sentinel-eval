@@ -1,13 +1,14 @@
 import json
 import unittest
 
-GOLDEN_PATH = "payloads/scenarios_golden.json"
+GOLDEN_PATH = "payloads/v2/scenarios_golden.json"
 
 
 class TestGoldenPayload(unittest.TestCase):
     def test_reference_security_status_matches_is_safe(self):
         with open(GOLDEN_PATH, encoding="utf-8") as f:
-            cases = json.load(f)
+            envelope = json.load(f)
+        cases = envelope["cases"] if isinstance(envelope, dict) else envelope
         self.assertEqual(len(cases), 12)
         for case in cases:
             ref = json.loads(case["reference_answer"])

@@ -1,0 +1,12 @@
+{
+  "suite": "mutation-stress-10",
+  "prompt_version": "is_safe_v3.0",
+  "dataset_version": "mut-1.0",
+  "description": "Advisory floors for mutation suite with --judge-ensemble (heuristic). Tune after baseline run.",
+  "floors": {
+    "schema_valid_pct": 90.0,
+    "label_match_pct": 50.0,
+    "ensemble_pass_pct": 50.0,
+    "security_pass_pct": 50.0
+  }
+}

@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from sentinel_eval.domain.models import (
     AuditOutput,
@@ -67,6 +67,24 @@ def results_as_dicts(
     return out
 
 
+class RunLineage(BaseModel):
+    """Reproducibility fingerprints for production eval infra."""
+
+    prompt_sha256: str = ""
+    dataset_sha256: str = ""
+    dataset_version: str = ""
+    auditor_backend: str = ""
+    model_temperature: float | None = None
+    model_seed: int | None = None
+    model_params: dict[str, Any] = Field(default_factory=dict)
+    cache_enabled: bool = False
+    cache_hits: int = 0
+    cache_misses: int = 0
+    rubric_version: str = ""
+    judge_ensemble_mode: str = ""
+    mutation_kinds: list[str] = Field(default_factory=list)
+
+
 class RunMeta(BaseModel):
     model: str
     prompt_version: str = PROMPT_VERSION
@@ -76,6 +94,7 @@ class RunMeta(BaseModel):
     payload: str = ""
     full_suite: bool = False
     metrics: SuiteMetrics = Field(default_factory=SuiteMetrics)
+    lineage: RunLineage = Field(default_factory=RunLineage)
 
     @field_validator("metrics", mode="before")
     @classmethod
@@ -86,8 +105,40 @@ class RunMeta(BaseModel):
             return SuiteMetrics.model_validate(value)
         return SuiteMetrics()
 
+    @field_validator("lineage", mode="before")
+    @classmethod
+    def coerce_lineage(cls, value: Any) -> RunLineage:
+        if isinstance(value, RunLineage):
+            return value
+        if isinstance(value, dict):
+            return RunLineage.model_validate(value)
+        return RunLineage()
+
     include_generated: bool | None = None
     tag_filter: list[str] | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _split_flat_lineage(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        payload = dict(data)
+        lineage_raw = payload.pop("lineage", None)
+        if isinstance(lineage_raw, RunLineage):
+            payload["lineage"] = lineage_raw.model_dump()
+            return payload
+        if lineage_raw is None:
+            lineage_raw = {}
+        elif hasattr(lineage_raw, "model_dump"):
+            lineage_raw = lineage_raw.model_dump()
+        elif not isinstance(lineage_raw, dict):
+            lineage_raw = {}
+        for key in RunLineage.model_fields:
+            if key in payload:
+                lineage_raw[key] = payload.pop(key)
+        if lineage_raw:
+            payload["lineage"] = lineage_raw
+        return payload
 
 
 class RunReport(BaseModel):
@@ -98,9 +149,12 @@ class RunReport(BaseModel):
         return [r.to_report_dict() for r in self.results]
 
     def to_json_dict(self) -> dict[str, Any]:
+        meta_body = self.meta.model_dump(exclude={"metrics", "lineage"})
+        lineage_body = self.meta.lineage.model_dump()
         return {
             "meta": {
-                **self.meta.model_dump(exclude={"metrics"}),
+                **meta_body,
+                **lineage_body,
                 "metrics": self.meta.metrics.to_dict(),
             },
             "results": self.results_as_dicts(),

@@ -19,7 +19,7 @@ class TestEvalRunner(unittest.TestCase):
         self.assertIn("is_safe", out["reference_answer"])
 
     def test_load_payload_returns_test_cases(self):
-        cases = load_payload_cases("payloads/scenarios_golden.json")
+        cases = load_payload_cases("v2")
         self.assertEqual(len(cases), 12)
         self.assertEqual(cases[0].case_id, "TC-001-INJECTION")
         self.assertIsInstance(cases[0].email_thread, str)

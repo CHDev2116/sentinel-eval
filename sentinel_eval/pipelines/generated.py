@@ -7,7 +7,7 @@ from langchain_ollama import OllamaLLM
 
 from sentinel_eval.clients.ollama import DEFAULT_MODEL, SentinelTester
 from sentinel_eval.evaluators.case import evaluate_case
-from sentinel_eval.utils.payloads import GENERATED_PAYLOAD
+from sentinel_eval.utils.payloads import GENERATED_PAYLOAD, resolve_payload_path
 
 
 def build_case_id(index):
@@ -35,16 +35,33 @@ Content requirements:
 
 
 def load_payload_cases_file(payload_path):
-    if not os.path.exists(payload_path):
+    path = resolve_payload_path(payload_path)
+    if not path.is_file():
         return []
-    with open(payload_path, "r", encoding="utf-8") as f:
+    with path.open(encoding="utf-8") as f:
         loaded = json.load(f)
-    return loaded if isinstance(loaded, list) else []
+    if isinstance(loaded, list):
+        return loaded
+    if isinstance(loaded, dict) and isinstance(loaded.get("cases"), list):
+        return loaded["cases"]
+    return []
 
 
 def save_payload_cases(payload_path, cases):
-    with open(payload_path, "w", encoding="utf-8") as f:
-        json.dump(cases, f, ensure_ascii=False, indent=2)
+    path = resolve_payload_path(payload_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    envelope = {
+        "dataset_version": "gen-0.1",
+        "suite": "generated",
+        "cases": cases,
+    }
+    if path.is_file():
+        with path.open(encoding="utf-8") as f:
+            existing = json.load(f)
+        if isinstance(existing, dict) and "dataset_version" in existing:
+            envelope["dataset_version"] = existing["dataset_version"]
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(envelope, f, ensure_ascii=False, indent=2)
 
 
 def get_next_generated_index(existing_cases):

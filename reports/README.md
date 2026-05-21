@@ -1,14 +1,14 @@
 # Reports Folder Guide
 
-Runtime outputs are **gitignored** except this README. Generate locally with `python main.py`.
+Runtime outputs are **gitignored** except this README. Generate locally with `sentinel-eval`.
 
 ## Layout
 
 | Path | Producer | Format |
 |------|----------|--------|
-| `evaluation_results.json` | `main.py` | `{ "meta": {...}, "results": [...] }` |
-| `latest.json` | `main.py` | Same as above |
-| `runs/<timestamp>.json` | `main.py` | Timestamped copy |
+| `evaluation_results.json` | `sentinel-eval` | `{ "meta": {...}, "results": [...] }` |
+| `latest.json` | `sentinel-eval` | Same as above |
+| `runs/<timestamp>.json` | `sentinel-eval` | Timestamped copy |
 | `generated_runs/<timestamp>.json` | `examples/generated_pipeline.py` | Generated batch |
 | `async_runs/<timestamp>.jsonl` | `examples/tri_agent.py` | JSONL + meta line |
 | `async_latest.jsonl` | `examples/tri_agent.py` | Latest async snapshot |

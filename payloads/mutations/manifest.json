@@ -1,0 +1,9 @@
+{
+  "dataset_version": "mut-1.0",
+  "suite": "mutation-stress-10",
+  "description": "Cases for adversarial mutation engine stress (per-case mutation_kinds).",
+  "cases_file": "scenarios_mutation.json",
+  "case_count": 10,
+  "compatible_prompts": ["is_safe_v2.2", "is_safe_v3.0"],
+  "recommended_cli": "--payload mutations --judge-ensemble"
+}

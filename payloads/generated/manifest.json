@@ -1,0 +1,7 @@
+{
+  "dataset_version": "gen-0.1",
+  "suite": "generated",
+  "description": "Experimental LLM-generated adversarial cases.",
+  "cases_file": "scenarios.json",
+  "case_count": 4
+}

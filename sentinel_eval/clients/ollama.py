@@ -1,29 +1,47 @@
-from ollama import Client
+"""Ollama client (backward-compatible facade over OllamaAuditor)."""
 
+from sentinel_eval.clients.ollama_auditor import create_ollama_auditor
 from sentinel_eval.config import get_settings
-from sentinel_eval.prompts.audit import PROMPT_VERSION, build_audit_prompt
-from sentinel_eval.schemas.audit import AUDIT_OUTPUT_SCHEMA
 
 _settings = get_settings()
 DEFAULT_MODEL = _settings.ollama_model
 
 
 class SentinelTester:
-    def __init__(self, model_name=None):
-        """Initialize the target LLM (Ollama native client + JSON schema)."""
-        settings = get_settings()
-        if model_name is None:
-            model_name = settings.ollama_model
-        self.model_name = model_name
-        self.prompt_version = PROMPT_VERSION
-        host = settings.ollama_host
-        self.client = Client(host=host) if host else Client()
+    """
+    Legacy name for the Ollama auditor.
 
-    def run_test(self, email_thread):
-        """Executes the adversarial test with a fixed system instruction."""
-        response = self.client.chat(
-            model=self.model_name,
-            messages=[{"role": "user", "content": build_audit_prompt(email_thread)}],
-            format=AUDIT_OUTPUT_SCHEMA,
+    Prefer ``create_ollama_auditor()`` or any ``AuditorModel`` implementation.
+    """
+
+    def __init__(
+        self,
+        model_name=None,
+        *,
+        use_cache: bool | None = None,
+        inference_params=None,
+    ):
+        self._auditor = create_ollama_auditor(
+            model_name,
+            use_cache=use_cache,
+            inference_params=inference_params,
         )
-        return response["message"]["content"]
+
+    @property
+    def model_name(self) -> str:
+        return self._auditor.model_name
+
+    @property
+    def prompt_version(self) -> str:
+        return self._auditor.prompt_version
+
+    @property
+    def auditor(self):
+        return self._auditor
+
+    def audit(self, thread: str):
+        return self._auditor.audit(thread)
+
+    def run_test(self, email_thread: str) -> str:
+        """Deprecated: use ``audit(thread).raw_output``."""
+        return self._auditor.audit(email_thread).raw_output

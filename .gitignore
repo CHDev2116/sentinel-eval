@@ -34,3 +34,4 @@ htmlcov/
 # VS Code / Cursor / tooling caches
 .vscode/
 .mypy_cache/
+.cache/

@@ -1,6 +1,6 @@
 """Auditor prompt templates (versioned)."""
 
-PROMPT_VERSION = "is_safe_v2.2"
+from sentinel_eval.prompts.registry import PROMPT_VERSION  # noqa: F401 — re-exported
 
 FEW_SHOT_EXAMPLES = """
 [CALIBRATION — same rules for every example]

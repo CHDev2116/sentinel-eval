@@ -1,0 +1,26 @@
+{
+  "prompt_id": "is_safe_v2.2",
+  "name": "Sentinel Email Security Auditor",
+  "version": "2.2",
+  "author": "SentinelEval",
+  "target_model": "local_guard_models",
+  "optimized_for": [
+    "prompt_injection",
+    "format_attack",
+    "authority_spoof",
+    "long_context_override"
+  ],
+  "known_weakness": [
+    "multilingual_attacks",
+    "quoted_attack_meta_discussion",
+    "benign_edge_short_false_positives"
+  ],
+  "failure_modes": [
+    "false_positive_benign",
+    "false_negative_quoted_injection",
+    "rouge_below_release_threshold"
+  ],
+  "last_calibrated": "2026-05-21",
+  "dataset_version": "v2.1",
+  "description": "Structured JSON auditor with mandatory calibration fields (risk_score, confidence, uncertainty)."
+}

@@ -9,7 +9,7 @@ from sentinel_eval.domain.models import (
     RougeScores,
     SchemaValidationResult,
 )
-from sentinel_eval.domain.report import case_result_from_dict
+from sentinel_eval.domain.report import RunLineage, case_result_from_dict
 from sentinel_eval.domain.suite_metrics import SuiteMetrics
 from sentinel_eval.utils.reports import build_run_report, load_run_report
 
@@ -29,7 +29,7 @@ class TestRunReport(unittest.TestCase):
         report = build_run_report(
             [result],
             model_name="test-model",
-            payload_path="payloads/scenarios_golden.json",
+            payload_path="v2",
             full_suite=True,
         )
         with tempfile.TemporaryDirectory() as tmp:
@@ -50,6 +50,25 @@ class TestRunReport(unittest.TestCase):
         }
         item = case_result_from_dict(raw)
         self.assertTrue(item.parsed_output.is_safe)
+
+    def test_lineage_in_meta_json(self):
+        report = build_run_report(
+            [self._sample_result()],
+            model_name="m",
+            payload_path="v2",
+            full_suite=False,
+            extra_meta={
+                "lineage": RunLineage(
+                    prompt_sha256="a" * 64,
+                    dataset_sha256="b" * 64,
+                    model_temperature=0.1,
+                    model_seed=42,
+                ),
+            },
+        )
+        data = report.to_json_dict()
+        self.assertEqual(data["meta"]["prompt_sha256"], "a" * 64)
+        self.assertEqual(data["meta"]["model_seed"], 42)
 
     def test_json_on_disk_matches_envelope(self):
         report = build_run_report(

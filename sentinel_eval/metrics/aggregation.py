@@ -19,6 +19,15 @@ def _pct(num, den):
     return round(100 * num / den, 1)
 
 
+def _ensemble_pass_value(result: dict[str, Any]) -> bool | None:
+    block = result.get("ensemble_eval")
+    if block is None:
+        return None
+    if isinstance(block, dict):
+        return block.get("ensemble_pass")
+    return getattr(block, "ensemble_pass", None)
+
+
 def serialize_rouge(rouge_scores):
     return {
         metric: {
@@ -49,15 +58,18 @@ def _metrics_for_subset(results: list[dict[str, Any]]) -> dict[str, Any]:
     security_scored = [r for r in results if r.get("security_pass") is not None]
     composite_scored = [r for r in results if r.get("composite_pass") is not None]
     release_scored = [r for r in results if r.get("release_pass") is not None]
+    ensemble_scored = [r for r in results if _ensemble_pass_value(r) is not None]
     label_ok = sum(1 for r in scored if r["prediction_match"])
     security_ok = sum(1 for r in security_scored if r["security_pass"])
     composite_ok = sum(1 for r in composite_scored if r["composite_pass"])
     release_ok = sum(1 for r in release_scored if r["release_pass"])
+    ensemble_ok = sum(1 for r in ensemble_scored if _ensemble_pass_value(r))
     rouge_l = [r["rouge"]["rougeL"]["f1"] for r in results if "rougeL" in r.get("rouge", {})]
 
     n_security = len(security_scored) or n
     n_composite = len(composite_scored) or n
     n_release = len(release_scored) or n
+    n_ensemble = len(ensemble_scored)
     classification = compute_classification_metrics(results)
 
     return {
@@ -66,6 +78,7 @@ def _metrics_for_subset(results: list[dict[str, Any]]) -> dict[str, Any]:
         "label_match_pct": _pct(label_ok, len(scored)) if scored else None,
         "security_pass_pct": _pct(security_ok, n_security),
         "composite_pass_pct": _pct(composite_ok, n_composite),
+        "ensemble_pass_pct": _pct(ensemble_ok, n_ensemble) if n_ensemble else None,
         "release_pass_pct": _pct(release_ok, n_release),
         "avg_rouge_l_f1": round(sum(rouge_l) / len(rouge_l), 2) if rouge_l else 0.0,
         "injection_recall_pct": classification.injection_recall_pct or classification.recall_pct,
@@ -91,13 +104,16 @@ def aggregate_metrics(results: list[Any]) -> SuiteMetrics:
     security_scored = [r for r in dict_results if r.get("security_pass") is not None]
     composite_scored = [r for r in dict_results if r.get("composite_pass") is not None]
     release_scored = [r for r in dict_results if r.get("release_pass") is not None]
+    ensemble_scored = [r for r in dict_results if _ensemble_pass_value(r) is not None]
     label_ok = sum(1 for r in scored if r["prediction_match"])
     security_ok = sum(1 for r in security_scored if r["security_pass"])
     composite_ok = sum(1 for r in composite_scored if r["composite_pass"])
     release_ok = sum(1 for r in release_scored if r["release_pass"])
+    ensemble_ok = sum(1 for r in ensemble_scored if _ensemble_pass_value(r))
     n_security = len(security_scored) or n
     n_composite = len(composite_scored) or n
     n_release = len(release_scored) or n
+    n_ensemble = len(ensemble_scored)
 
     classification = overall.get("classification")
     if not isinstance(classification, ClassificationMetrics):
@@ -122,6 +138,8 @@ def aggregate_metrics(results: list[Any]) -> SuiteMetrics:
         security_pass=f"{security_ok}/{n_security}",
         composite_pass_pct=overall["composite_pass_pct"],
         composite_pass=f"{composite_ok}/{n_composite}",
+        ensemble_pass_pct=overall["ensemble_pass_pct"],
+        ensemble_pass=f"{ensemble_ok}/{n_ensemble}" if n_ensemble else "n/a",
         release_pass_pct=overall["release_pass_pct"],
         release_pass=f"{release_ok}/{n_release}",
         release_rouge_l_threshold=RELEASE_ROUGE_L_THRESHOLD,

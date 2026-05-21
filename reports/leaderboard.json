@@ -7,7 +7,7 @@
       "prompt_version": "is_safe_v2.2",
       "timestamp": "2026-05-21T13:53:28.460862+00:00",
       "suite": "golden-12",
-      "payload": "payloads/scenarios_golden.json",
+      "payload": "v2",
       "cases_run": 12,
       "report_path": "reports/latest.json",
       "metrics": {
