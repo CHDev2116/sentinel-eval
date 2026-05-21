@@ -1,5 +1,5 @@
 from sentinel_eval.evaluators.calibration_evaluator import CalibrationEvaluator
-from sentinel_eval.evaluators.case import evaluate_case, evaluate_case_dict
+from sentinel_eval.evaluators.case import evaluate_case
 from sentinel_eval.evaluators.case_evaluator import CaseEvaluator
 from sentinel_eval.evaluators.release_gate_checker import ReleaseGate
 from sentinel_eval.evaluators.release_gate_evaluator import ReleaseGateEvaluator
@@ -11,7 +11,6 @@ from sentinel_eval.evaluators.semantic_evaluator import SemanticEvaluator
 
 __all__ = [
     "evaluate_case",
-    "evaluate_case_dict",
     "CaseEvaluator",
     "SemanticEvaluator",
     "SchemaEvaluator",

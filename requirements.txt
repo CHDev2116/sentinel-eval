@@ -1,4 +1,0 @@
-# See pyproject.toml. Install: pip install -e .
-# Dev (lint + tests): pip install -e ".[dev]"
-# Demos (LangChain): pip install -e ".[demos]"
--e .

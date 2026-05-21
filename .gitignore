@@ -31,9 +31,6 @@ __pycache__/
 coverage.xml
 htmlcov/
 
-# VS Code / Cursor
-.vscode/*
-!.vscode/settings.json
-!.vscode/zsh/
-!.vscode/zsh/.zshrc
-.vscode/zsh/.zsh_history
+# VS Code / Cursor / tooling caches
+.vscode/
+.mypy_cache/

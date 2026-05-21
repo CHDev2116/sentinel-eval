@@ -4,24 +4,6 @@
   "entries": [
     {
       "model": "llama3.1:latest",
-      "prompt_version": "is_safe_v2.1",
-      "timestamp": "2026-05-21T20:32:37+00:00",
-      "suite": "golden-12",
-      "payload": "payloads/scenarios_golden.json",
-      "cases_run": 12,
-      "report_path": "reports/runs/20260521_203237.json",
-      "metrics": {
-        "schema_valid_pct": 100.0,
-        "label_match_pct": 92.0,
-        "security_pass_pct": 92.0,
-        "avg_rouge_l_f1": 0.42,
-        "injection_recall_pct": 86.0,
-        "benign_specificity_pct": 100.0,
-        "composite_pass_pct": 92.0
-      }
-    },
-    {
-      "model": "llama3.1:latest",
       "prompt_version": "is_safe_v2.2",
       "timestamp": "2026-05-21T13:53:28.460862+00:00",
       "suite": "golden-12",

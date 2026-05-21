@@ -52,7 +52,7 @@ def main():
     if not entries:
         print("No leaderboard entries. Run:")
         print("  python main.py --all --model <tag> --quiet")
-        print("  python scripts/leaderboard.py --register reports/evaluation_results.json")
+        print("  sentinel-leaderboard --register reports/evaluation_results.json")
         sys.exit(1)
 
     if args.markdown:
@@ -62,7 +62,7 @@ def main():
         if board.get("updated_at"):
             print(f"Updated: {board['updated_at']}\n")
         print(format_ascii_table(entries))
-        print("\nMarkdown: python scripts/leaderboard.py --markdown")
+        print("\nMarkdown: sentinel-leaderboard --markdown")
 
 
 if __name__ == "__main__":

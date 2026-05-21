@@ -53,7 +53,7 @@ def main():
             f"`{prompt}` |"
         )
         print(
-            "# Register: python scripts/leaderboard.py --register",
+            "# Register: sentinel-leaderboard --register",
             args.report,
             file=sys.stderr,
         )

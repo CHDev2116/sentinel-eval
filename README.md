@@ -80,7 +80,7 @@ The harness parses this schema, checks fields, compares `is_safe` to `expected_i
 <p align="center">
   <img src="docs/screenshots/leaderboard.svg" alt="Model leaderboard CLI output" width="900"/>
 </p>
-<p align="center"><em>Leaderboard — <code>python scripts/leaderboard.py</code></em></p>
+<p align="center"><em>Leaderboard — <code>sentinel-leaderboard</code></em></p>
 
 <p align="center">
   <img src="docs/screenshots/report_json.svg" alt="Evaluation report JSON structure" width="900"/>
@@ -119,7 +119,7 @@ See `meta.metrics.classification` in run reports for exact counts.
 | `llama3.1:latest` | `is_safe_v2.1` | **100%** | **92%** | **0.42** |
 | `gemma:7b-instruct-q4_K_M` | — | — | — | — |
 
-Add your model: `python main.py --all --model <tag> --quiet` → `python scripts/leaderboard.py --register reports/evaluation_results.json`
+Add your model: `python main.py --all --model <tag> --quiet` → `sentinel-leaderboard --register reports/evaluation_results.json`
 
 ## Why This Matters
 
@@ -279,14 +279,14 @@ Dev iteration uses `--rouge-l-threshold 0.25` (composite pass); release uses fix
 | `payloads/scenarios_golden.json` | 12-case benchmark (canonical; `email_scenarios.json` removed) |
 | `examples/` | Runnable demos (single case, tri-agent, generated) |
 | `payloads/README.md` | Golden vs generated cases; `security_status` conventions |
-| `scripts/leaderboard.py` | Multi-model table |
+| `sentinel-leaderboard` | Multi-model table |
 | `.github/workflows/ci.yml` | Tests on push/PR |
 
 ### Evaluation snapshot (detail)
 
 Golden suite: [`payloads/scenarios_golden.json`](payloads/scenarios_golden.json) · 12 cases · prompt `is_safe_v2.2`
 
-Reference answers use `security_status: "Pass"` when safe and `"Fail"` when unsafe (aligned with the auditor prompt). Re-run the full benchmark after payload updates: `python main.py --all --model <tag> --quiet` then `python scripts/leaderboard.py --register reports/evaluation_results.json`.
+Reference answers use `security_status: "Pass"` when safe and `"Fail"` when unsafe (aligned with the auditor prompt). Re-run the full benchmark after payload updates: `python main.py --all --model <tag> --quiet` then `sentinel-leaderboard --register reports/evaluation_results.json`.
 
 | Metric | Result (`is_safe_v2.2`) |
 |--------|-------------------------|
@@ -301,9 +301,9 @@ Default `python main.py` = **3-case smoke** (laptop-friendly). Use `--all` for f
 ### Leaderboard commands
 
 ```bash
-python scripts/leaderboard.py --register reports/evaluation_results.json
-python scripts/leaderboard.py --markdown
-python scripts/summarize_run.py --tags
+sentinel-leaderboard --register reports/evaluation_results.json
+sentinel-leaderboard --markdown
+sentinel-summarize --tags
 ```
 
 ### CLI reference
@@ -339,7 +339,7 @@ report.write_json("reports/evaluation_results.json")
 
 # Logs: default text on stderr; structured JSON with --json-logs
 python main.py --all --quiet --json-logs
-python scripts/summarize_run.py reports/evaluation_results.json --release-gate --json-logs
+sentinel-summarize reports/evaluation_results.json --release-gate --json-logs
 ```
 
 ### Test case format
