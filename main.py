@@ -155,7 +155,8 @@ def main():
             print(
                 f"{result['case_id']}: schema={result['schema_validation']['is_valid']} "
                 f"label={match_s} security={result['security_pass']} "
-                f"rougeL={result['rouge']['rougeL']['f1']:.2f} composite={result['composite_pass']}"
+                f"rougeL={result['rouge']['rougeL']['f1']:.2f} "
+                f"release={result.get('release_pass')} composite={result['composite_pass']}"
             )
 
     report_path, metrics = write_run_report(

@@ -17,8 +17,19 @@ class TestResponseUtils(unittest.TestCase):
 
     def test_parse_legacy_is_inclusive(self):
         raw = '{"is_inclusive": true, "reasoning": "ok", "security_status": "Pass"}'
-        parsed, _ = parse_audit_response(raw)
+        parsed, canonical = parse_audit_response(raw)
         self.assertTrue(parsed["is_safe"])
+        self.assertNotIn("is_inclusive", canonical)
+        self.assertIn('"is_safe": true', canonical)
+
+    def test_parse_prefers_is_safe_over_legacy(self):
+        raw = (
+            '{"is_inclusive": true, "is_safe": false, "reasoning": "x", '
+            '"security_status": "Fail"}'
+        )
+        parsed, canonical = parse_audit_response(raw)
+        self.assertFalse(parsed["is_safe"])
+        self.assertNotIn("is_inclusive", canonical)
 
     def test_parse_invalid_json(self):
         parsed, _ = parse_audit_response("not json at all")

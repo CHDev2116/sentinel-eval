@@ -4,6 +4,18 @@ import re
 AUDIT_KEYS = ("is_safe", "reasoning", "security_status")
 LEGACY_SAFE_KEY = "is_inclusive"
 
+# Ollama structured output (langchain_ollama passes this as format="json" schema when supported).
+AUDIT_OUTPUT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "is_safe": {"type": "boolean"},
+        "reasoning": {"type": "string"},
+        "security_status": {"type": "string"},
+    },
+    "required": ["is_safe", "reasoning", "security_status"],
+    "additionalProperties": False,
+}
+
 
 def normalize_model_output(raw_output):
     """Normalize LLM output to a clean string."""
@@ -58,13 +70,34 @@ def _coerce_bool(value):
     return None
 
 
+def normalize_legacy_field_names(text):
+    """Rewrite deprecated JSON keys in model text before parsing."""
+    if not text:
+        return text
+    normalized = text
+    for old, new in (
+        ('"is_inclusive"', '"is_safe"'),
+        ("'is_inclusive'", "'is_safe'"),
+    ):
+        normalized = normalized.replace(old, new)
+    return normalized
+
+
+def _normalize_loaded_audit(loaded):
+    """Drop legacy is_inclusive key; keep is_safe as the single source of truth."""
+    if not isinstance(loaded, dict):
+        return loaded
+    if LEGACY_SAFE_KEY in loaded:
+        legacy_value = loaded.pop(LEGACY_SAFE_KEY)
+        if "is_safe" not in loaded:
+            loaded["is_safe"] = legacy_value
+    return loaded
+
+
 def _normalize_safe_flag(loaded):
-    """Map is_safe or legacy is_inclusive to is_safe."""
-    if isinstance(loaded, dict):
-        if "is_safe" in loaded:
-            return _coerce_bool(loaded.get("is_safe"))
-        if LEGACY_SAFE_KEY in loaded:
-            return _coerce_bool(loaded.get(LEGACY_SAFE_KEY))
+    """Read is_safe from a normalized audit object."""
+    if isinstance(loaded, dict) and "is_safe" in loaded:
+        return _coerce_bool(loaded.get("is_safe"))
     return None
 
 
@@ -77,7 +110,7 @@ def parse_audit_response(raw_output):
         - parsed object with guaranteed keys (is_safe, reasoning, security_status)
         - cleaned output string used for parsing
     """
-    clean_output = normalize_model_output(raw_output)
+    clean_output = normalize_legacy_field_names(normalize_model_output(raw_output))
     json_text = extract_json_text(clean_output)
 
     parsed = {
@@ -86,7 +119,7 @@ def parse_audit_response(raw_output):
         "security_status": "ParseError",
     }
     try:
-        loaded = json.loads(json_text)
+        loaded = _normalize_loaded_audit(json.loads(json_text))
         parsed["is_safe"] = _normalize_safe_flag(loaded)
         parsed["reasoning"] = str(loaded.get("reasoning", "")).strip()
         parsed["security_status"] = (
@@ -95,7 +128,8 @@ def parse_audit_response(raw_output):
     except (json.JSONDecodeError, TypeError, ValueError):
         parsed["reasoning"] = "Model output could not be parsed as valid JSON."
 
-    return parsed, clean_output
+    canonical_output = audit_json_canonical(parsed)
+    return parsed, canonical_output
 
 
 def audit_json_canonical(parsed_output):

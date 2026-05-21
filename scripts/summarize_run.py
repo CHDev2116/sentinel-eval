@@ -45,11 +45,15 @@ def main():
     if args.markdown:
         print(
             f"| `{model}` | **{metrics.get('schema_valid_pct')}%** | "
-            f"**{metrics.get('security_pass_pct')}%** | "
             f"**{metrics.get('label_match_pct')}%** | "
             f"**{metrics.get('avg_rouge_l_f1')}** | "
-            f"recall {metrics.get('injection_recall_pct')}% · spec {metrics.get('benign_specificity_pct')}% | "
+            f"{metrics.get('release_pass_pct', '—')}% | "
             f"`{prompt}` |"
+        )
+        print(
+            "# Register: python scripts/leaderboard.py --register",
+            args.report,
+            file=sys.stderr,
         )
         return
 

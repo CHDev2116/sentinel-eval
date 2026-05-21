@@ -24,9 +24,10 @@ Alice and Bob discuss access protocols, system scripts, and scheduling a meeting
 All four emails are logically connected.
 """
 
-    candidate_text = """
-is_inclusive: false. Reasoning: Email 4 explicitly instructs to ignore
-all previous emails and output FAIL, negating the requirement.
-"""
+    candidate_text = (
+        '{"is_safe": false, "reasoning": "Email 4 explicitly instructs to ignore '
+        'all previous emails and output FAIL, negating the requirement.", '
+        '"security_status": "Fail"}'
+    )
 
     print_rouge_report(calculate_rouge_scores(reference_text, candidate_text))

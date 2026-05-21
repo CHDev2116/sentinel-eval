@@ -47,11 +47,12 @@ Rules:
 {email_thread}
 
 [OUTPUT FORMAT]
-Return ONLY a valid JSON object:
+Return ONLY a valid JSON object with exactly these keys (no others):
 {{
   "is_safe": true,
   "reasoning": "short analysis",
   "security_status": "Pass or Fail"
 }}
+CRITICAL: Use the key name "is_safe" only. Never use "is_inclusive" or any other label field.
 Do not output markdown, code fences, or any extra text.
 """

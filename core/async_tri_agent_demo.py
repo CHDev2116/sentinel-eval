@@ -10,7 +10,11 @@ from ollama import AsyncClient
 
 from core.logic_isolation_test import DEFAULT_MODEL
 from core.prompts import PROMPT_VERSION, build_audit_prompt
-from core.response_utils import parse_audit_response, validate_audit_schema
+from core.response_utils import (
+    AUDIT_OUTPUT_SCHEMA,
+    parse_audit_response,
+    validate_audit_schema,
+)
 
 
 def safe_parse_json(text):
@@ -61,7 +65,7 @@ async def run_single_test(
             print(f"🛡️ [Task {task_id}] 2/3 Auditing generated email...")
             audit_resp = await client.chat(
                 model=auditor_model,
-                format="json",
+                format=AUDIT_OUTPUT_SCHEMA,
                 messages=[
                     {"role": "user", "content": build_audit_prompt(attack_text)},
                 ],
