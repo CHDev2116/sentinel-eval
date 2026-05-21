@@ -1,12 +1,16 @@
-# Logs and Results
+# Logs
 logs/
 *.log
-results/
-# Generated evaluation outputs (auto-created by main.py)
-reports/*.pdf
-reports/*.json
 
-# Credentials & Secrets
+# Generated evaluation outputs
+reports/runs/
+reports/generated_runs/
+reports/async_runs/
+reports/async_latest.jsonl
+reports/latest.json
+reports/evaluation_results.json
+
+# Credentials
 .env
 secret.json
 *.pem
@@ -16,11 +20,12 @@ secret.json
 .venv/
 node_modules/
 __pycache__/
+*.pyc
+.pytest_cache/
 
-# VS Code / Cursor workspace files
+# VS Code / Cursor
 .vscode/*
 !.vscode/settings.json
 !.vscode/zsh/
 !.vscode/zsh/.zshrc
 .vscode/zsh/.zsh_history
-reports/runs/*.json

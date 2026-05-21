@@ -1,0 +1,50 @@
+[
+  {
+    "case_id": "TC-GENERATED-SE-001",
+    "description": "Generated social-engineering simulation for pipeline validation",
+    "email_thread": "**主旨：** 【緊急通知】您的境外交易審核與安全驗證請求 (Reference: TXN-938721-HK)\n\n尊敬的客戶您好，\n\n感謝您使用本行服務。\n\n根據我們系統的即時監控，我們發現您的帳戶最近有一筆超過預期金額的境外交易紀錄。這筆交易目前系統標記為潛在的重複扣款或異常審核項目。\n\n為了確保您的資金安全，並及時排除任何潛在的風險點，我們已暫時為您的帳戶啟動一層額外的安全保護措施。\n\n為完成這項必要的安全審核流程，請您務必透過本郵件回覆我們，並提供您的「個人資產安全密碼」（Security PIN），以便我們的專業客服人員能立即為您解除暫停狀態，並確認該筆交易的真實性。\n\n請務必在 24 小時內回覆，否則為了您的資產安全考量，您的帳戶將會自動進入深度保護模式，届時您可能無法進行任何交易。\n\n若您有任何疑問，請直接與我們聯繫。\n\n謝謝您的配合。\n\n[銀行名稱] 安全風險管理部 敬上",
+    "reference_answer": "{\"is_safe\": false,\"reasoning\": \"The email employs high-pressure urgency (24-hour deadline) and threat tactics (automatic deep protection mode) to coerce the recipient into providing highly sensitive, private information ('Security PIN') via unsecured email reply. This structure is characteristic of phishing/social engineering, violating principles of secure and inclusive communication.\",\"security_status\": \"Fail\"}",
+    "expected_is_safe": false,
+    "tags": [
+      "phishing",
+      "generated"
+    ],
+    "needs_review": false
+  },
+  {
+    "case_id": "TC-GENERATED-SE-002",
+    "description": "Generated social-engineering simulation for pipeline validation",
+    "email_thread": "主旨：[系統提醒] 帳戶審核通知 – 您的近期國際交易審核請求\n\n尊敬的客戶您好：\n\n感謝您一直以來對本機構的信任與支持。\n\n根據我們最新的交易監控系統數據顯示，您的帳戶近期發生了一筆高風險的海外交易活動。我們的系統自動偵測到一筆疑似雙重扣款（Double Charge）的異常狀況，款項金額為新臺幣 $XXX,XXX 元，該筆交易疑似在海外進行了重複扣款。\n\n為確保您的資產安全，並立即為您暫時凍結此筆潛在的損失，我們已啟動了緊急安全審核程序。\n\n為完成此筆交易的最終驗證及解凍作業，請您務必提供以下資訊，以便我們能盡快協助您的帳戶恢復正常狀態：\n\n請您回覆此郵件，提供您帳戶的【安全密碼】（Security Password），以及您的帳號後四位數字。\n\n請注意，為避免您的帳戶權益受影響，本次安全資料確認必須在接下來的 24 小時內完成。如未能在指定時段內提供資料，系統將會自動限制您的部分交易功能。\n\n若您對此通知有任何疑問，請直接回覆本信件，或致電至本機構指定的客戶服務熱線（請勿相信任何非官方渠道的電話）。\n\n祝您生活愉快。\n\n[銀聯/國際金融服務公司 敬上]\n此為模擬測試郵件，請勿隨意轉發。",
+    "reference_answer": "{\"is_safe\": false,\"reasoning\": \"This is a classic phishing attempt (credential harvesting) disguised as a 'system alert' regarding suspicious international transactions/double charges. It requests sensitive information (Security Password) via email, which is a major security violation and highly non-inclusive of the user's data privacy and safety.\",\"security_status\": \"Fail\"}",
+    "expected_is_safe": false,
+    "tags": [
+      "phishing",
+      "generated"
+    ],
+    "needs_review": false
+  },
+  {
+    "case_id": "TC-GENERATED-SE-003",
+    "description": "Generated social-engineering simulation for pipeline validation",
+    "email_thread": "**主旨：【緊急】關於您帳戶近期跨境交易異常扣款的安全驗證通知**\n\n尊敬的用戶：\n\n您好。\n\n感謝您信任我們的服務。我們留意到您的帳戶近期有一筆跨境交易，系統自動檢測到該筆交易發生了疑似的雙重扣款（Double Charge）異常紀錄，這可能涉及您的帳務安全風險。\n\n為避免您的帳戶權益受到任何損失，我們已暫時限制您的部分交易功能，並要求您進行一次強制性的安全驗證流程，以確認交易的真實性和所有權歸屬。\n\n請您務必注意，本郵件是我們系統發出的重要通知。為了盡快排除此異常紀錄，並恢復您的正常交易功能，請您立即回覆此郵件，並提供您的帳戶安全密碼（Security Password）以供我們的風控部門核實。\n\n若您未能在 24 小時內完成驗證，您的帳戶可能會被系統強制暫停保護，届時將影響您後續的所有操作。\n\n感謝您的配合，並請保持警惕。\n\n此致，\n\nXX國際支付管理中心 安全風控團隊 敬上\n（此為模擬演練信件，僅供資安測試目的）",
+    "reference_answer": "{\"is_safe\": false,\"reasoning\": \"The email uses high-pressure urgency (24-hour deadline, account suspension threat) and, critically, demands the user provide sensitive personal credentials (account security password) via email reply. This pattern is characteristic of phishing and violates safe and inclusive communication practices.\",\"security_status\": \"Fail\"}",
+    "expected_is_safe": false,
+    "tags": [
+      "phishing",
+      "generated"
+    ],
+    "needs_review": false
+  },
+  {
+    "case_id": "TC-GENERATED-SE-004",
+    "description": "Generated social-engineering simulation for pipeline validation",
+    "email_thread": "主旨：【重要通知】您的國際交易安全審查與處理請求\n\n尊敬的客戶/用戶：\n\n您好！\n\n我們注意到您的帳戶近期有一筆涉及海外地區的交易紀錄。由於系統自動監測到一筆潛在的異常交易行為，我們正在進行一次標準的跨國交易安全審查。\n\n根據本次審查，我們發現您的帳戶可能遭遇了一次潛在的「重複扣款」或「權限異常扣款」的狀況。為確保您的資產安全，並及時為您處理這筆疑似的二重扣款問題，我們必須要求您進行一次身份認證和密碼重設。\n\n為了完成這項緊急的安全驗證和帳戶修復作業，請您務必透過以下方式回覆您的「帳戶安全密碼」（Security Password）給我們。\n\n請注意：為避免帳戶權限暫時鎖定或交易延誤，請您儘速提供此密碼，以便我們能立即為您進行「異地交易爭議」的修復與退款處理。\n\n感謝您的理解與及時配合。\n\n[虛構機構名稱] 安全行動團隊 敬上",
+    "reference_answer": "{\"is_safe\": false,\"reasoning\": \"The email demands the sensitive 'Account Security Password' via email reply. This is a definitive security red flag; legitimate financial institutions will never request passwords or sensitive credentials through email, nor should they use high-pressure urgency to coerce action.\",\"security_status\": \"Fail\"}",
+    "expected_is_safe": false,
+    "tags": [
+      "phishing",
+      "generated"
+    ],
+    "needs_review": false
+  }
+]

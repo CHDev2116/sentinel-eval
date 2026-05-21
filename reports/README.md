@@ -1,45 +1,32 @@
 # Reports Folder Guide
 
-This folder stores runtime outputs from different evaluation flows.
+Runtime outputs are **gitignored** except this README. Generate locally with `python main.py`.
 
-## File and Folder Map
+## Layout
 
-- `evaluation_results.json`
-  - Backward-compatible batch output from `main.py`.
-- `latest.json`
-  - Latest batch output snapshot from `main.py`.
-- `runs/`
-  - Timestamped batch outputs from `main.py` (`YYYYMMDD_HHMMSS.json`).
-- `generated_runs/`
-  - Timestamped outputs from `core/generated_case_pipeline_demo.py`.
-- `async_latest.jsonl`
-  - Latest async tri-agent output snapshot.
-- `async_runs/`
-  - Timestamped async tri-agent outputs (`YYYYMMDD_HHMMSS.jsonl`).
+| Path | Producer | Format |
+|------|----------|--------|
+| `evaluation_results.json` | `main.py` | `{ "meta": {...}, "results": [...] }` |
+| `latest.json` | `main.py` | Same as above |
+| `runs/<timestamp>.json` | `main.py` | Timestamped copy |
+| `generated_runs/<timestamp>.json` | `generated_case_pipeline_demo.py` | Generated batch |
+| `async_runs/<timestamp>.jsonl` | `async_tri_agent_demo.py` | JSONL + meta line |
+| `async_latest.jsonl` | `async_tri_agent_demo.py` | Latest async snapshot |
 
-## Suggested Cleanup Policy
+## Summarize a run
 
-- Keep `latest.json` and `async_latest.jsonl` as stable "latest" entry points.
-- Keep recent timestamped files for traceability.
-- Optionally delete older timestamped files in `generated_runs/`, `async_runs/`, and `runs/` to save space.
+```bash
+python scripts/summarize_run.py reports/evaluation_results.json
+python scripts/summarize_run.py reports/evaluation_results.json --markdown
+```
 
-## Auto Cleanup Script
-
-Use `core/cleanup_reports.py` to keep only recent timestamped reports.
-
-Preview only:
+## Cleanup
 
 ```bash
 python core/cleanup_reports.py --keep 2 --dry-run
-```
-
-Apply cleanup:
-
-```bash
 python core/cleanup_reports.py --keep 2
 ```
 
-## Notes
+## After heavy evals
 
-- Do not rename `evaluation_results.json` unless you also update tooling/docs that depend on it.
-- Do not move `latest.json` or `async_latest.jsonl` if scripts rely on fixed paths.
+Unload models to cool the machine: `ollama stop <model>` or quit the Ollama app.
