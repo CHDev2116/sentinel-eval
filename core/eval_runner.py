@@ -149,6 +149,7 @@ def evaluate_case(case, tester, rouge_l_threshold=DEFAULT_ROUGE_L_THRESHOLD):
         "tags": case.get("tags", []),
         "needs_review": needs_review,
         "parsed_output": parsed_output,
+        "audit_output": clean_output,
         "schema_validation": schema_validation,
         "expected_is_safe": expected_is_safe,
         "prediction_match": prediction_match,

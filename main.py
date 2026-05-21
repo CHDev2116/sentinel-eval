@@ -133,8 +133,8 @@ def main():
         results.append(result)
 
         if not args.quiet:
-            print("--- ✅ Parsed Audit ---")
-            print(json.dumps(result["parsed_output"], ensure_ascii=False, indent=2))
+            print("--- ✅ Parsed Audit (is_safe schema) ---")
+            print(result.get("audit_output") or json.dumps(result["parsed_output"], ensure_ascii=False))
             print(
                 f"--- 🧪 Schema --- valid={result['schema_validation']['is_valid']}, "
                 f"errors={result['schema_validation']['errors']}"

@@ -75,11 +75,9 @@ def normalize_legacy_field_names(text):
     if not text:
         return text
     normalized = text
-    for old, new in (
-        ('"is_inclusive"', '"is_safe"'),
-        ("'is_inclusive'", "'is_safe'"),
-    ):
-        normalized = normalized.replace(old, new)
+    normalized = re.sub(r'"is_inclusive"\s*:', '"is_safe":', normalized)
+    normalized = re.sub(r"'is_inclusive'\s*:", "'is_safe':", normalized)
+    normalized = re.sub(r"\bis_inclusive\s*:", "is_safe:", normalized)
     return normalized
 
 
@@ -87,11 +85,12 @@ def _normalize_loaded_audit(loaded):
     """Drop legacy is_inclusive key; keep is_safe as the single source of truth."""
     if not isinstance(loaded, dict):
         return loaded
-    if LEGACY_SAFE_KEY in loaded:
-        legacy_value = loaded.pop(LEGACY_SAFE_KEY)
-        if "is_safe" not in loaded:
-            loaded["is_safe"] = legacy_value
-    return loaded
+    out = dict(loaded)
+    if LEGACY_SAFE_KEY in out:
+        legacy_value = out.pop(LEGACY_SAFE_KEY)
+        if "is_safe" not in out:
+            out["is_safe"] = legacy_value
+    return out
 
 
 def _normalize_safe_flag(loaded):
@@ -119,7 +118,8 @@ def parse_audit_response(raw_output):
         "security_status": "ParseError",
     }
     try:
-        loaded = _normalize_loaded_audit(json.loads(json_text))
+        raw_loaded = json.loads(json_text)
+        loaded = _normalize_loaded_audit(raw_loaded)
         parsed["is_safe"] = _normalize_safe_flag(loaded)
         parsed["reasoning"] = str(loaded.get("reasoning", "")).strip()
         parsed["security_status"] = (
