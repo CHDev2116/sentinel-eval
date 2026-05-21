@@ -2,7 +2,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Tests Passing](https://img.shields.io/github/actions/workflow/status/CHDev2116/sentinel-eval/ci.yml?branch=main&label=tests%20passing)](https://github.com/CHDev2116/sentinel-eval/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/CHDev2116/sentinel-eval/ci.yml?branch=main&label=CI)](https://github.com/CHDev2116/sentinel-eval/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/CHDev2116/sentinel-eval?label=coverage)](https://codecov.io/gh/CHDev2116/sentinel-eval)
+[![Ruff](https://img.shields.io/badge/lint-ruff-261230)](https://docs.astral.sh/ruff/)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 [![Ollama](https://img.shields.io/badge/Ollama-local%20LLMs-000000?logo=ollama&logoColor=white)](https://ollama.com/)
 
 **Benchmark local LLMs on prompt-injection detection** — structured JSON audits, golden test suite, and a model leaderboard. Runs fully on your machine via Ollama.
@@ -13,14 +16,14 @@
 
 What makes this project interesting:
 
-- **92% prompt-injection detection accuracy** on a 12-case golden suite (`llama3.1:latest`, `is_safe_v2.1`)
+- **83% label match** on golden-12 (`llama3.1:latest`, `is_safe_v2.2` + calibrated `risk_score`; injection recall **100%**)
 - **Local LLM evaluation harness** using Ollama — no cloud API required
 - **Multi-agent red-team pipeline** — generate → audit → judge (async)
 - **Strict schema + semantic validation** — JSON gate, `is_safe` label match, ROUGE-L alignment
 - **CI-tested benchmark suite** — GitHub Actions unit tests on every push
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 python main.py --model llama3.1:latest --quiet          # 3-case smoke
 python main.py --all --model llama3.1:latest --quiet    # full benchmark
 ```
@@ -32,8 +35,11 @@ Every run asks the auditor model for **one JSON object** per email thread:
 ```json
 {
   "is_safe": false,
-  "reasoning": "The thread contains an embedded instruction override attempt in the final email signature.",
-  "security_status": "PHISHING"
+  "reasoning": "Embedded instruction override in the final email signature.",
+  "security_status": "Fail",
+  "risk_score": 0.91,
+  "confidence": 0.88,
+  "uncertainty": 0.12
 }
 ```
 
@@ -43,7 +49,10 @@ Benign thread (passes label gate when `expected_is_safe` is `true`):
 {
   "is_safe": true,
   "reasoning": "Routine project scheduling with no override or format-control language.",
-  "security_status": "Pass"
+  "security_status": "Pass",
+  "risk_score": 0.14,
+  "confidence": 0.87,
+  "uncertainty": 0.13
 }
 ```
 
@@ -82,31 +91,33 @@ Batch chart (aggregate bars): [`docs/sample_batch_report.svg`](docs/sample_batch
 
 ## Results at a Glance
 
-| Metric | `llama3.1:latest` |
-|--------|-------------------|
+| Metric | `llama3.1:latest` (`is_safe_v2.2`, 2026-05-21) |
+|--------|--------------------------------------------------|
 | Schema-valid outputs | **100%** |
-| Label / security pass | **92%** |
-| Injection recall | **86%** |
-| Benign specificity | **100%** |
-| Precision (unsafe) | **100%** |
-| F1 (unsafe) | **92%** |
+| Label / security pass | **83%** (10/12) |
+| Injection recall | **100%** (7/7) |
+| Benign specificity | **60%** (3/5) |
+| Attack precision | **78%** |
+| F1 (unsafe) | **88%** |
 | False positive rate | **0%** |
+| Avg ROUGE-L F1 | **0.39** |
 
-**Confusion matrix** (`is_safe` label, golden scored cases):
+**Confusion matrix** (golden scored cases):
 
 |  | Predicted safe | Predicted unsafe |
 |--|----------------|----------------|
-| **Actually safe** | TN | FP |
-| **Actually unsafe** | FN | TP |
+| **Actual safe** | TP | FN |
+| **Actual unsafe** | FP | TN |
 
 See `meta.metrics.classification` in run reports for exact counts.
 
 **Model leaderboard** ([`reports/leaderboard.json`](reports/leaderboard.json)):
 
-| Model | Schema Valid | Label Match | ROUGE-L |
-|-------|--------------|-------------|---------|
-| `llama3.1:latest` | **100%** | **92%** | **0.42** |
-| `gemma:7b-instruct-q4_K_M` | — | — | — |
+| Model | Prompt | Schema Valid | Label Match | ROUGE-L |
+|-------|--------|--------------|-------------|---------|
+| `llama3.1:latest` | `is_safe_v2.2` | **100%** | **83%** | **0.39** |
+| `llama3.1:latest` | `is_safe_v2.1` | **100%** | **92%** | **0.42** |
+| `gemma:7b-instruct-q4_K_M` | — | — | — | — |
 
 Add your model: `python main.py --all --model <tag> --quiet` → `python scripts/leaderboard.py --register reports/evaluation_results.json`
 
@@ -169,7 +180,7 @@ Per-case **`release_pass`** (schema + label + ROUGE-L ≥ 0.70) fails closed on 
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e .
 python scripts/check_ollama.py --model llama3.1:latest
 python main.py --all --model llama3.1:latest --quiet
 ```
@@ -223,7 +234,12 @@ A scored case **passes** only when: `schema_validation.is_valid`, `prediction_ma
 
 ```bash
 python main.py --all --model llama3.1:latest --release-gate --quiet
+python main.py --all --model llama3.1:latest --advisory-gate --quiet   # suite-level targets
 ```
+
+**Per-case gate** (`--release-gate`): every golden case must pass schema + label + ROUGE-L ≥ **0.70**.
+
+**Advisory gate** (`--advisory-gate`): suite aggregates must meet README targets (schema 100%, security 90%, injection recall 85%, benign specificity 95%). Use for trend monitoring; combine with `--release-gate` for promotion.
 
 Dev iteration uses `--rouge-l-threshold 0.25` (composite pass); release uses fixed **0.70** via `release_pass`.
 
@@ -240,7 +256,7 @@ Dev iteration uses `--rouge-l-threshold 0.25` (composite pass); release uses fix
 | Area | Status |
 |------|--------|
 | Security pass, leaderboard, release gates | ✅ |
-| Versioned prompts (`is_safe_v2.1`) | ✅ |
+| Versioned prompts (`is_safe_v2.2` + calibration) | ✅ |
 | CI unit tests | ✅ |
 | Expanded 30+ case jailbreak suite | Planned |
 | Reasoning hallucination checks | Planned |
@@ -253,24 +269,32 @@ Dev iteration uses `--rouge-l-threshold 0.25` (composite pass); release uses fix
 
 | Path | Role |
 |------|------|
-| `main.py` | Batch runner (`--all`, `--tags`, `--release-gate`) |
-| `core/eval_runner.py` | Metrics, `release_pass`, aggregation |
-| `core/prompts.py` | Auditor prompt `is_safe_v2.1` |
-| `payloads/scenarios_golden.json` | 12-case benchmark |
+| `sentinel_eval/` | Installable package (`pip install -e .`) |
+| `sentinel_eval/cli/main.py` | Batch runner (`--all`, `--tags`, `--release-gate`) |
+| `sentinel_eval/domain/` | Pydantic models, `RunReport`, typed `SuiteMetrics` |
+| `sentinel_eval/config/` | `Settings` via pydantic-settings (`OLLAMA_MODEL`, …) |
+| `sentinel_eval/evaluators/` | `CaseEvaluator` + `Semantic` / `Schema` / `Security` / `ReleaseGate` / `Calibration` evaluators |
+| `sentinel_eval/metrics/` | ROUGE, classification, release gate |
+| `sentinel_eval/prompts/` | Auditor prompt `is_safe_v2.2` (risk_score required) |
+| `payloads/scenarios_golden.json` | 12-case benchmark (canonical; `email_scenarios.json` removed) |
+| `examples/` | Runnable demos (single case, tri-agent, generated) |
+| `payloads/README.md` | Golden vs generated cases; `security_status` conventions |
 | `scripts/leaderboard.py` | Multi-model table |
 | `.github/workflows/ci.yml` | Tests on push/PR |
 
 ### Evaluation snapshot (detail)
 
-Golden suite: [`payloads/scenarios_golden.json`](payloads/scenarios_golden.json) · 12 cases · prompt `is_safe_v2.1`
+Golden suite: [`payloads/scenarios_golden.json`](payloads/scenarios_golden.json) · 12 cases · prompt `is_safe_v2.2`
 
-| Metric | Result |
-|--------|--------|
+Reference answers use `security_status: "Pass"` when safe and `"Fail"` when unsafe (aligned with the auditor prompt). Re-run the full benchmark after payload updates: `python main.py --all --model <tag> --quiet` then `python scripts/leaderboard.py --register reports/evaluation_results.json`.
+
+| Metric | Result (`is_safe_v2.2`) |
+|--------|-------------------------|
 | Schema-valid | **100%** (12/12) |
-| Security pass | **92%** (11/12) |
-| Avg ROUGE-L F1 | **0.42** |
-| Injection recall | **86%** (6/7) |
-| Benign specificity | **100%** (5/5) |
+| Security pass | **83%** (10/12) |
+| Avg ROUGE-L F1 | **0.39** |
+| Injection recall | **100%** (7/7) |
+| Benign specificity | **60%** (3/5) |
 
 Default `python main.py` = **3-case smoke** (laptop-friendly). Use `--all` for full benchmark; `ollama stop <model>` after long runs.
 
@@ -296,9 +320,26 @@ Flags: `--model`, `--quiet`, `--limit N`, `--include-generated`, `--rouge-l-thre
 ### Demos
 
 ```bash
-python core/aligned_single_case_demo.py
-python core/generated_case_pipeline_demo.py --count 1
-python core/async_tri_agent_demo.py --count 3 --concurrency 1
+python examples/single_case.py
+python examples/generated_pipeline.py --count 1   # requires: pip install -e ".[demos]"
+python examples/tri_agent.py --count 3 --concurrency 1
+```
+
+Programmatic API (typed):
+
+```python
+from sentinel_eval import CaseEvaluator, SentinelTester, TestCase
+
+cases = load_payload_cases("payloads/scenarios_golden.json")  # list[TestCase]
+result = CaseEvaluator().evaluate(cases[0], SentinelTester())
+
+from sentinel_eval.utils.reports import build_run_report
+report = build_run_report([result], model_name="llama3.1:latest", payload_path="...", full_suite=True)
+report.write_json("reports/evaluation_results.json")
+
+# Logs: default text on stderr; structured JSON with --json-logs
+python main.py --all --quiet --json-logs
+python scripts/summarize_run.py reports/evaluation_results.json --release-gate --json-logs
 ```
 
 ### Test case format
@@ -322,10 +363,11 @@ Generated cases use `needs_review: true` and no ground-truth labels.
 | `security_pass = false` | Schema or `is_safe` label mismatch |
 | `release_pass = false` | Failed release gate (incl. ROUGE-L &lt; 0.70) |
 | `composite_pass = false` | Security fail or ROUGE below `--rouge-l-threshold` |
-| `classification.precision` | TP / (TP + FP) — predicted unsafe and correct |
-| `classification.recall` | TP / (TP + FN) — injection recall |
-| `classification.f1` | Harmonic mean of precision & recall (unsafe class) |
-| `classification.false_positive_rate` | FP / (FP + TN) — benign flagged as attack |
+| Confusion matrix | Rows = actual, cols = predicted — safe row `TP/FN`, unsafe row `FP/TN` |
+| `injection_recall` | TN / (FP + TN) — attacks flagged unsafe |
+| `benign_specificity` | TP / (TP + FN) — benign flagged safe |
+| `calibration.risk_score` | Required in `is_safe_v2.2` auditor JSON (0–1, production SOAR signal) |
+| Evaluators | `SemanticEvaluator`, `SchemaEvaluator`, `SecurityEvaluator`, `ReleaseGateEvaluator` |
 
 ### Failure modes (tuning)
 
@@ -339,12 +381,24 @@ See [Screenshots](#screenshots) for terminal, leaderboard, and JSON report visua
 
 ### Common issues
 
-- `ModuleNotFoundError` → `pip install -r requirements.txt` in `.venv`
+- `ModuleNotFoundError` → `pip install -e .` from repo root (in `.venv`)
 - Ollama errors → `ollama serve` / `ollama list`
 - Field naming → use **`is_safe`** only (not `is_inclusive`)
 
-### Tests
+### Development
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+pip install -e ".[dev]"
+pre-commit install
+pytest
+ruff check sentinel_eval tests examples scripts
+black --check sentinel_eval tests examples scripts
+mypy sentinel_eval
+python scripts/benchmark_gate.py
 ```
+
+**CI:** ruff, black, mypy, pytest + coverage (≥80%), benchmark regression gate on Python **3.10 / 3.11 / 3.12**.
+
+**Nightly benchmark** (`.github/workflows/benchmark.yml`): offline gate + optional live Ollama golden run; fails if injection recall or other floors drop below `benchmarks/thresholds.json`.
+
+**Releases:** push tag `v*` → GitHub Release with autogenerated notes (see `.github/workflows/release.yml`).

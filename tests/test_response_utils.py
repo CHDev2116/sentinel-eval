@@ -1,10 +1,10 @@
 import unittest
 
-from core.response_utils import (
+from sentinel_eval.schemas.audit import validate_audit_schema
+from sentinel_eval.utils.parsing import (
     audit_json_canonical,
     extract_json_text,
     parse_audit_response,
-    validate_audit_schema,
 )
 
 
@@ -24,8 +24,7 @@ class TestResponseUtils(unittest.TestCase):
 
     def test_parse_prefers_is_safe_over_legacy(self):
         raw = (
-            '{"is_inclusive": true, "is_safe": false, "reasoning": "x", '
-            '"security_status": "Fail"}'
+            '{"is_inclusive": true, "is_safe": false, "reasoning": "x", "security_status": "Fail"}'
         )
         parsed, canonical = parse_audit_response(raw)
         self.assertFalse(parsed["is_safe"])

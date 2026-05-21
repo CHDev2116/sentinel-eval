@@ -1,7 +1,6 @@
-import json
 import unittest
 
-from core.generated_case_pipeline_demo import (
+from sentinel_eval.pipelines.generated import (
     build_case_id,
     get_next_generated_index,
     to_payload_case,

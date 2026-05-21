@@ -3,7 +3,7 @@ import os
 import tempfile
 import unittest
 
-from core.leaderboard import (
+from sentinel_eval.reporting.leaderboard import (
     entry_from_report,
     format_markdown_table,
     load_leaderboard,

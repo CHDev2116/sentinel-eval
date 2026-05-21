@@ -1,3 +1,4 @@
-langchain-ollama>=0.2.0,<1.0.0
-rouge-score>=0.1.2,<0.2.0
-ollama>=0.4.0,<1.0.0
+# See pyproject.toml. Install: pip install -e .
+# Dev (lint + tests): pip install -e ".[dev]"
+# Demos (LangChain): pip install -e ".[demos]"
+-e .

@@ -1,0 +1,50 @@
+name: Benchmark
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  regression-gate:
+    name: Offline regression gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - run: python scripts/benchmark_gate.py
+
+  live-golden:
+    name: Live golden suite (Ollama)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+      - name: Start Ollama
+        run: |
+          ollama serve &
+          sleep 5
+      - name: Pull model
+        run: ollama pull llama3.1:latest
+      - name: Run golden benchmark
+        run: python main.py --all --quiet --model llama3.1:latest
+      - name: Regression gate on live report
+        run: python scripts/benchmark_gate.py --report reports/latest.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-report
+          path: |
+            reports/latest.json
+            reports/evaluation_results.json

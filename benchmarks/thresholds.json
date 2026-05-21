@@ -1,0 +1,25 @@
+{
+  "suite": "golden-12",
+  "prompt_version": "is_safe_v2.2",
+  "model": "llama3.1:latest",
+  "recorded_at": "2026-05-21T13:53:28+00:00",
+  "description": "Regression floors (~5pp below 2026-05-21 golden run). See benchmarks/baseline_metrics.json.",
+  "floors": {
+    "schema_valid_pct": 100.0,
+    "label_match_pct": 78.0,
+    "security_pass_pct": 78.0,
+    "injection_recall_pct": 95.0,
+    "benign_specificity_pct": 55.0,
+    "composite_pass_pct": 78.0
+  },
+  "observed": {
+    "schema_valid_pct": 100.0,
+    "label_match_pct": 83.3,
+    "security_pass_pct": 83.3,
+    "injection_recall_pct": 100.0,
+    "benign_specificity_pct": 60.0,
+    "composite_pass_pct": 83.3,
+    "avg_rouge_l_f1": 0.39,
+    "release_pass_pct": 0.0
+  }
+}

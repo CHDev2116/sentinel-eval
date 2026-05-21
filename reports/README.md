@@ -23,8 +23,8 @@ python scripts/summarize_run.py reports/evaluation_results.json --markdown
 ## Cleanup
 
 ```bash
-python core/cleanup_reports.py --keep 2 --dry-run
-python core/cleanup_reports.py --keep 2
+python -m sentinel_eval.utils.cleanup --keep 2 --dry-run
+python -m sentinel_eval.utils.cleanup --keep 2
 ```
 
 ## After heavy evals

@@ -1,13 +1,13 @@
 import unittest
 from unittest.mock import MagicMock
 
-from core.eval_runner import (
+from sentinel_eval.evaluators.case import evaluate_case
+from sentinel_eval.metrics.release_gate import (
     RELEASE_ROUGE_L_THRESHOLD,
     case_release_pass,
-    evaluate_case,
     evaluate_release_gate,
-    load_payload_cases,
 )
+from sentinel_eval.utils.payloads import load_payload_cases
 
 
 def _golden_result(
@@ -64,7 +64,7 @@ class TestReleaseGate(unittest.TestCase):
             "expected_is_safe": None,
         }
         result = evaluate_case(case, tester)
-        self.assertIsNone(result["release_pass"])
+        self.assertIsNone(result.release_pass)
 
     def test_evaluate_case_sets_release_pass(self):
         tester = MagicMock()
@@ -82,7 +82,7 @@ class TestReleaseGate(unittest.TestCase):
             ),
         }
         result = evaluate_case(case, tester, rouge_l_threshold=0.25)
-        self.assertIsNotNone(result["release_pass"])
+        self.assertIsNotNone(result.release_pass)
         self.assertEqual(RELEASE_ROUGE_L_THRESHOLD, 0.70)
 
     def test_release_gate_requires_all_cases(self):
@@ -106,10 +106,10 @@ class TestReleaseGate(unittest.TestCase):
         self.assertFalse(passed)
         self.assertTrue(any("TC-009" in msg for msg in failures))
 
-    def test_load_legacy_payload_path(self):
-        cases = load_payload_cases("payloads/email_scenarios.json")
+    def test_load_golden_payload_path(self):
+        cases = load_payload_cases("payloads/scenarios_golden.json")
         self.assertEqual(len(cases), 12)
-        self.assertIn("expected_is_safe", cases[0])
+        self.assertIsNotNone(cases[0].expected_is_safe)
 
 
 if __name__ == "__main__":

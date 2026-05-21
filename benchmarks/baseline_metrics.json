@@ -1,0 +1,9 @@
+{
+  "schema_valid_pct": 100.0,
+  "label_match_pct": 83.3,
+  "injection_recall_pct": 100.0,
+  "benign_specificity_pct": 60.0,
+  "security_pass_pct": 83.3,
+  "cases_run": 12,
+  "prompt_version": "is_safe_v2.2"
+}

@@ -1,6 +1,6 @@
 {
   "suite": "golden-12",
-  "updated_at": "2026-05-21T20:32:37+00:00",
+  "updated_at": "2026-05-21T13:53:54.517337+00:00",
   "entries": [
     {
       "model": "llama3.1:latest",
@@ -18,6 +18,28 @@
         "injection_recall_pct": 86.0,
         "benign_specificity_pct": 100.0,
         "composite_pass_pct": 92.0
+      }
+    },
+    {
+      "model": "llama3.1:latest",
+      "prompt_version": "is_safe_v2.2",
+      "timestamp": "2026-05-21T13:53:28.460862+00:00",
+      "suite": "golden-12",
+      "payload": "payloads/scenarios_golden.json",
+      "cases_run": 12,
+      "report_path": "reports/latest.json",
+      "metrics": {
+        "schema_valid_pct": 100.0,
+        "label_match_pct": 83.3,
+        "security_pass_pct": 83.3,
+        "release_pass_pct": 0.0,
+        "avg_rouge_l_f1": 0.39,
+        "injection_recall_pct": 100.0,
+        "benign_specificity_pct": 60.0,
+        "precision_pct": 77.8,
+        "f1_pct": 87.5,
+        "false_positive_rate_pct": 0.0,
+        "composite_pass_pct": 83.3
       }
     }
   ]

@@ -16,12 +16,20 @@ secret.json
 *.pem
 *.key
 
+# Packaging
+*.egg-info/
+dist/
+build/
+
 # Environments
 .venv/
 node_modules/
 __pycache__/
 *.pyc
 .pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 
 # VS Code / Cursor
 .vscode/*

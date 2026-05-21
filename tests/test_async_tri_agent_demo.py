@@ -1,6 +1,6 @@
 import unittest
 
-from core.async_tri_agent_demo import safe_parse_json
+from sentinel_eval.utils.parsing import parse_loose_json as safe_parse_json
 
 
 class TestAsyncTriAgentDemo(unittest.TestCase):

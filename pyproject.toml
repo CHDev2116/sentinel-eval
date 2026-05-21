@@ -1,0 +1,107 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentinel-eval"
+version = "0.7.0"
+description = "Benchmark local LLMs on prompt-injection detection via Ollama"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "ollama>=0.4.0,<1.0.0",
+  "pydantic>=2.0,<3.0",
+  "pydantic-settings>=2.0,<3.0",
+  "rouge-score>=0.1.2,<0.2.0",
+]
+
+[project.optional-dependencies]
+demos = ["langchain-ollama>=0.2.0,<1.0.0"]
+dev = [
+  "black>=24.0",
+  "mypy>=1.8",
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.4.0",
+  "types-requests>=2.31",
+]
+
+[project.scripts]
+sentinel-eval = "sentinel_eval.cli.main:main"
+sentinel-leaderboard = "sentinel_eval.cli.leaderboard:main"
+sentinel-summarize = "sentinel_eval.cli.summarize:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sentinel_eval*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = [
+  "-ra",
+  "--cov=sentinel_eval",
+  "--cov-report=term-missing:skip-covered",
+  "--cov-report=xml",
+  "--cov-fail-under=75",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+  "integration: needs optional deps or network",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["sentinel_eval"]
+omit = [
+  "sentinel_eval/__main__.py",
+  "sentinel_eval/cli/*",
+  "sentinel_eval/pipelines/*",
+  "sentinel_eval/utils/cleanup.py",
+  "sentinel_eval/utils/logging_config.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if __name__ == .__main__.:",
+  "raise NotImplementedError",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = false
+warn_unused_ignores = true
+check_untyped_defs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+files = ["sentinel_eval"]
+exclude = [
+  "sentinel_eval/pipelines/",
+]
+
+[[tool.mypy.overrides]]
+module = "sentinel_eval.reporting.leaderboard"
+ignore_errors = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["sentinel_eval", "tests", "examples", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"examples/*" = ["E501"]
+"sentinel_eval/prompts/*" = ["E501"]
+"tests/*" = ["E501"]
+"sentinel_eval/evaluators/case.py" = ["E501"]
+"sentinel_eval/cli/*" = ["E501"]
+"sentinel_eval/schemas/*" = ["E501"]
+"scripts/*" = ["E501"]

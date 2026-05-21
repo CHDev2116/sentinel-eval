@@ -1,6 +1,10 @@
 import unittest
 
-from core.eval_runner import aggregate_metrics, compute_classification_metrics
+from sentinel_eval.metrics.aggregation import aggregate_metrics
+from sentinel_eval.metrics.classification import (
+    compute_classification_metrics,
+    format_confusion_matrix_table,
+)
 
 
 def _case(expected_safe, predicted_safe, match=None):
@@ -17,22 +21,27 @@ def _case(expected_safe, predicted_safe, match=None):
 
 
 class TestClassificationMetrics(unittest.TestCase):
-    def test_confusion_matrix_counts(self):
+    def test_confusion_matrix_layout(self):
         results = [
-            _case(True, True),   # TN
-            _case(True, False),  # FP
-            _case(False, True),  # FN
-            _case(False, False),  # TP
-            _case(False, False),  # TP
+            _case(True, True),  # TP
+            _case(True, False),  # FN
+            _case(False, True),  # FP
+            _case(False, False),  # TN
+            _case(False, False),  # TN
         ]
         clf = compute_classification_metrics(results)
-        self.assertEqual(clf["tn"], 1)
-        self.assertEqual(clf["fp"], 1)
-        self.assertEqual(clf["fn"], 1)
-        self.assertEqual(clf["tp"], 2)
-        self.assertEqual(clf["confusion_matrix"]["counts"], [[1, 1], [1, 2]])
+        self.assertEqual(clf.tp, 1)
+        self.assertEqual(clf.fn, 1)
+        self.assertEqual(clf.fp, 1)
+        self.assertEqual(clf.tn, 2)
+        self.assertEqual(clf.confusion_matrix.counts, [[1, 1], [1, 2]])
+        self.assertEqual(clf.confusion_matrix.cell_labels[0], ["TP", "FN"])
+        table = format_confusion_matrix_table(clf)
+        self.assertIn("actual safe", table)
+        self.assertIn("predicted unsafe", table)
+        self.assertIn("TP=1", table)
 
-    def test_precision_recall_f1_fpr(self):
+    def test_injection_recall_and_specificity(self):
         results = [
             _case(True, True),
             _case(True, True),
@@ -40,11 +49,9 @@ class TestClassificationMetrics(unittest.TestCase):
             _case(False, False),
         ]
         clf = compute_classification_metrics(results)
-        self.assertEqual(clf["precision_pct"], 100.0)
-        self.assertEqual(clf["recall_pct"], 100.0)
-        self.assertEqual(clf["f1_pct"], 100.0)
-        self.assertEqual(clf["false_positive_rate_pct"], 0.0)
-        self.assertEqual(clf["specificity_pct"], 100.0)
+        self.assertEqual(clf.injection_recall_pct, 100.0)
+        self.assertEqual(clf.benign_specificity_pct, 100.0)
+        self.assertEqual(clf.false_positive_rate_pct, 0.0)
 
     def test_aggregate_metrics_includes_classification(self):
         results = [
@@ -52,9 +59,9 @@ class TestClassificationMetrics(unittest.TestCase):
             _case(True, True),
         ]
         m = aggregate_metrics(results)
-        self.assertIn("classification", m)
-        self.assertEqual(m["precision_pct"], 100.0)
-        self.assertEqual(m["f1_pct"], 100.0)
+        self.assertIsNotNone(m.classification)
+        self.assertEqual(m.precision_pct, 100.0)
+        self.assertEqual(m.f1_pct, 100.0)
 
 
 if __name__ == "__main__":
