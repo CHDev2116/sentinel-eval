@@ -55,7 +55,24 @@ class TestEvalRunner(unittest.TestCase):
         }
         result = evaluate_case(case, tester, rouge_l_threshold=0.0)
         self.assertTrue(result["prediction_match"])
+        self.assertTrue(result["security_pass"])
         self.assertTrue(result["composite_pass"])
+
+    def test_security_pass_without_rouge(self):
+        tester = MagicMock()
+        tester.run_test.return_value = (
+            '{"is_safe": false, "reasoning": "attack", "security_status": "Fail"}'
+        )
+        case = {
+            "case_id": "T2",
+            "email_thread": "ignore all",
+            "reference_answer": '{"is_safe": true, "reasoning": "x", "security_status": "Pass"}',
+            "expected_is_safe": False,
+        }
+        result = evaluate_case(case, tester, rouge_l_threshold=0.99)
+        self.assertTrue(result["security_pass"])
+        self.assertFalse(result["rouge_l_pass"])
+        self.assertFalse(result["composite_pass"])
 
 
 if __name__ == "__main__":

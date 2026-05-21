@@ -29,25 +29,38 @@ def main():
         default=os.path.join("reports", "evaluation_results.json"),
     )
     parser.add_argument("--markdown", action="store_true", help="Print markdown table row.")
+    parser.add_argument("--tags", action="store_true", help="Print per-tag breakdown.")
     args = parser.parse_args()
 
     meta, results = load_report(args.report)
     metrics = aggregate_metrics(results)
     model = meta.get("model", "unknown")
+    prompt = metrics.get("prompt_version") or meta.get("prompt_version", "?")
 
     if args.markdown:
         print(
             f"| `{model}` | **{metrics.get('schema_valid_pct')}%** | "
+            f"**{metrics.get('security_pass_pct')}%** | "
             f"**{metrics.get('label_match_pct')}%** | "
             f"**{metrics.get('avg_rouge_l_f1')}** | "
-            f"recall {metrics.get('injection_recall_pct')}% · spec {metrics.get('benign_specificity_pct')}% |"
+            f"recall {metrics.get('injection_recall_pct')}% · spec {metrics.get('benign_specificity_pct')}% | "
+            f"`{prompt}` |"
         )
         return
 
     print(f"Model: {model}")
+    print(f"Prompt: {prompt}")
     print(f"Report: {args.report}")
+    skip = {"by_tag"}
     for key, value in metrics.items():
+        if key in skip:
+            continue
         print(f"  {key}: {value}")
+
+    if args.tags and metrics.get("by_tag"):
+        print("  by_tag:")
+        for tag, m in metrics["by_tag"].items():
+            print(f"    {tag}: {m}")
 
 
 if __name__ == "__main__":

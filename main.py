@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 
 from core.eval_runner import (
@@ -28,6 +29,11 @@ def parse_args():
         help="Also run payloads/scenarios_generated.json (experimental cases).",
     )
     parser.add_argument(
+        "--tags",
+        default=None,
+        help="Comma-separated tags to filter cases (e.g. injection,benign).",
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         default=None,
@@ -48,7 +54,7 @@ def parse_args():
         "--rouge-l-threshold",
         type=float,
         default=0.25,
-        help="Minimum ROUGE-L F1 for composite pass.",
+        help="Minimum ROUGE-L F1 for composite pass (security pass is separate).",
     )
     parser.add_argument(
         "--quiet",
@@ -70,11 +76,20 @@ def main():
     args = parse_args()
     model_name = args.model or DEFAULT_MODEL
     tester = SentinelTester(model_name=model_name)
+    tag_filter = None
+    if args.tags:
+        tag_filter = [t.strip() for t in args.tags.split(",") if t.strip()]
 
     all_scenarios = load_payload_cases(
-        args.payload, include_generated=args.include_generated
+        args.payload,
+        include_generated=args.include_generated,
+        tag_filter=tag_filter,
     )
     total_cases = len(all_scenarios)
+    if total_cases == 0:
+        print("No cases matched filters.")
+        return
+
     run_count = resolve_limit(args, total_cases)
     scenarios = all_scenarios[:run_count]
 
@@ -86,7 +101,8 @@ def main():
         limit_note = f" ({run_count}/{total_cases} cases)"
 
     print(
-        f"🛡️  SentinelEval batch — model={model_name}, cases={run_count}{limit_note}"
+        f"🛡️  SentinelEval batch — model={model_name}, "
+        f"prompt={tester.prompt_version}, cases={run_count}{limit_note}"
     )
     if run_count < total_cases and not args.quiet:
         print(
@@ -105,8 +121,6 @@ def main():
 
         if not args.quiet:
             print("--- ✅ Parsed Audit ---")
-            import json
-
             print(json.dumps(result["parsed_output"], ensure_ascii=False, indent=2))
             print(
                 f"--- 🧪 Schema --- valid={result['schema_validation']['is_valid']}, "
@@ -119,6 +133,7 @@ def main():
                     f"--- 🎯 Label --- expected_is_safe={result['expected_is_safe']}, "
                     f"predicted={result['parsed_output'].get('is_safe')}, "
                     f"match={result['prediction_match']}, "
+                    f"security_pass={result['security_pass']}, "
                     f"composite_pass={result['composite_pass']}"
                 )
             print("-" * 30)
@@ -126,8 +141,8 @@ def main():
             match_s = "n/a" if result["prediction_match"] is None else result["prediction_match"]
             print(
                 f"{result['case_id']}: schema={result['schema_validation']['is_valid']} "
-                f"label_match={match_s} rougeL={result['rouge']['rougeL']['f1']:.2f} "
-                f"pass={result['composite_pass']}"
+                f"label={match_s} security={result['security_pass']} "
+                f"rougeL={result['rouge']['rougeL']['f1']:.2f} composite={result['composite_pass']}"
             )
 
     report_path, metrics = write_run_report(
@@ -135,7 +150,10 @@ def main():
         model_name=model_name,
         payload_path=args.payload,
         full_suite=args.all,
-        extra_meta={"include_generated": args.include_generated},
+        extra_meta={
+            "include_generated": args.include_generated,
+            "tag_filter": tag_filter,
+        },
     )
     print_metrics_summary(metrics, model_name)
     print(f"\n🧾 Run report: {report_path}")
