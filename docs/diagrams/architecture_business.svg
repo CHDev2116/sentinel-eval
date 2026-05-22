@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" role="img" aria-label="SentinelEval enterprise AI governance workflow">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f1a"/>
+      <stop offset="50%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.15"/>
+      <stop offset="50%" stop-color="#22d3ee" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.15"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 z" fill="#67e8f9"/>
+    </marker>
+    <style>
+      .h1 { fill:#f1f5f9; font:700 22px system-ui,-apple-system,sans-serif; letter-spacing:-0.02em }
+      .h2 { fill:#94a3b8; font:500 13px system-ui,sans-serif }
+      .lane { fill:#1e293b; stroke:#334155; stroke-width:1; rx:14 }
+      .node { fill:#172554; stroke:#3b82f6; stroke-width:1.5; rx:10; filter:url(#shadow) }
+      .nodeTeal { fill:#134e4a; stroke:#2dd4bf; stroke-width:1.5; rx:10; filter:url(#shadow) }
+      .nodePurple { fill:#3b0764; stroke:#a78bfa; stroke-width:1.5; rx:10; filter:url(#shadow) }
+      .nodeAmber { fill:#451a03; stroke:#fbbf24; stroke-width:1.5; rx:10; filter:url(#shadow) }
+      .t { fill:#e2e8f0; font:600 14px system-ui,sans-serif }
+      .s { fill:#94a3b8; font:12px system-ui,sans-serif }
+      .ext { fill:#0f172a; stroke:#475569; stroke-width:1; stroke-dasharray:6 4; rx:8 }
+      .extT { fill:#cbd5e1; font:600 11px system-ui,sans-serif }
+      .flow { stroke:#67e8f9; stroke-width:2.5; fill:none; marker-end:url(#arrow) }
+      .flowMuted { stroke:#64748b; stroke-width:1.5; fill:none; stroke-dasharray:5 4 }
+      .pill { fill:#1e3a8a; stroke:#60a5fa; rx:12 }
+      .pillT { fill:#bfdbfe; font:600 11px system-ui,sans-serif }
+    </style>
+  </defs>
+  <rect width="1100" height="520" fill="url(#bg)"/>
+  <rect x="40" y="72" width="1020" height="200" fill="url(#glow)" rx="16" opacity="0.6"/>
+  <text x="48" y="44" class="h1">SentinelEval  AI mail security &amp; governance workflow</text>
+  <text x="48" y="68" class="h2">Runs in your environment · extensible datasets · CI release gates</text>
+
+  <!-- Main pipeline -->
+  <rect x="48" y="100" width="1004" height="168" class="lane"/>
+  <rect x="72" y="128" width="148" height="112" class="node"/>
+  <text x="88" y="158" class="t">Your workflows</text>
+  <text x="88" y="178" class="s">Internal email · tickets</text>
+  <text x="88" y="196" class="s">SOC triage assist</text>
+  <text x="88" y="218" class="s">Copilot routing</text>
+
+  <path class="flow" d="M220 184 H248"/>
+  <rect x="248" y="128" width="148" height="112" class="nodeTeal"/>
+  <text x="264" y="158" class="t">Test library</text>
+  <text x="264" y="178" class="s">Golden + custom</text>
+  <text x="264" y="196" class="s">Attack surfaces</text>
+  <text x="264" y="218" class="s">Your policies</text>
+
+  <path class="flow" d="M396 184 H424"/>
+  <rect x="424" y="120" width="168" height="128" class="nodePurple"/>
+  <text x="440" y="152" class="t">AI auditor</text>
+  <text x="440" y="172" class="s">Ollama · vLLM · LM Studio</text>
+  <text x="440" y="190" class="s">Your enterprise prompts</text>
+  <text x="440" y="208" class="s">Structured JSON output</text>
+  <text x="440" y="228" class="s">Optional judge ensemble</text>
+
+  <path class="flow" d="M592 184 H620"/>
+  <rect x="620" y="128" width="168" height="112" class="nodeAmber"/>
+  <text x="636" y="158" class="t">Security scoring</text>
+  <text x="636" y="178" class="s">Safe vs unsafe label</text>
+  <text x="636" y="196" class="s">Calibration · schema</text>
+  <text x="636" y="218" class="s">Release gate</text>
+
+  <path class="flow" d="M788 184 H816"/>
+  <rect x="816" y="128" width="200" height="112" class="node"/>
+  <text x="832" y="158" class="t">Governance outputs</text>
+  <text x="832" y="178" class="s">CI pass / fail</text>
+  <text x="832" y="196" class="s">Leaderboard · history</text>
+  <text x="832" y="218" class="s">Executive readout</text>
+
+  <!-- Extensibility callouts -->
+  <rect x="72" y="300" width="200" height="88" class="ext"/>
+  <text x="88" y="324" class="extT">+ Custom attack datasets</text>
+  <text x="88" y="344" class="s">Import your thread shapes</text>
+  <text x="88" y="364" class="s">and compliance scenarios</text>
+
+  <rect x="300" y="300" width="200" height="88" class="ext"/>
+  <text x="316" y="324" class="extT">+ Enterprise prompts</text>
+  <text x="316" y="344" class="s">Plug in auditor templates</text>
+  <text x="316" y="364" class="s">per business unit</text>
+
+  <rect x="528" y="300" width="200" height="88" class="ext"/>
+  <text x="544" y="324" class="extT">+ Any local / hosted LLM</text>
+  <text x="544" y="344" class="s">Swap models without</text>
+  <text x="544" y="364" class="s">rewriting the harness</text>
+
+  <rect x="756" y="300" width="260" height="88" class="ext"/>
+  <text x="772" y="324" class="extT">+ Internal CI / release pipeline</text>
+  <text x="772" y="344" class="s">Block deploy on missed injections</text>
+  <text x="772" y="364" class="s">Regression on every model upgrade</text>
+
+  <path class="flowMuted" d="M172 240 v44 h-28"/>
+  <path class="flowMuted" d="M322 240 v44 h28"/>
+  <path class="flowMuted" d="M508 248 v36 h52"/>
+  <path class="flowMuted" d="M704 240 v44 h116"/>
+
+  <!-- Pills -->
+  <rect x="424" y="408" width="120" height="28" class="pill"/>
+  <text x="444" y="427" class="pillT">Extensible framework</text>
+  <rect x="560" y="408" width="140" height="28" class="pill"/>
+  <text x="576" y="427" class="pillT">Not a fixed one-size test</text>
+  <rect x="716" y="408" width="160" height="28" class="pill"/>
+  <text x="732" y="427" class="pillT">Adapts to your company</text>
+
+  <text x="48" y="492" class="s">Export PNG: scripts/export_business_diagram.sh (requires rsvg-convert or Inkscape)</text>
+</svg>

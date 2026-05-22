@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="360" viewBox="0 0 880 360" role="img" aria-label="Leaderboard comparison preview">
+  <defs>
+    <style>
+      .bg { fill:#0f172a }
+      .card { fill:#1e293b; stroke:#334155; rx:10 }
+      .h { fill:#f8fafc; font:700 17px system-ui,sans-serif }
+      .th { fill:#94a3b8; font:600 11px system-ui,sans-serif }
+      .row { fill:#0f172a; rx:6 }
+      .name { fill:#e2e8f0; font:13px system-ui,sans-serif }
+      .num { fill:#cbd5e1; font:13px monospace }
+      .win { fill:#4ade80; font-weight:bold }
+      .barBg { fill:#334155; rx:4 }
+      .bar { fill:#3b82f6; rx:4 }
+      .bar2 { fill:#22d3ee; rx:4 }
+    </style>
+  </defs>
+  <rect width="880" height="360" class="bg"/>
+  <text x="32" y="36" class="h">Model leaderboard  pick the safest auditor</text>
+
+  <rect x="32" y="56" width="816" height="280" class="card"/>
+  <text x="48" y="88" class="th">MODEL</text>
+  <text x="280" y="88" class="th">INJECTION RECALL</text>
+  <text x="480" y="88" class="th">SECURITY PASS</text>
+  <text x="680" y="88" class="th">RELEASE</text>
+
+  <rect x="48" y="100" width="784" height="44" class="row"/>
+  <text x="64" y="128" class="name">llama3.1:latest + is_safe_v2.2</text>
+  <rect x="280" y="114" width="160" height="16" class="barBg"/>
+  <rect x="280" y="114" width="160" height="16" class="bar">
+    <animate attributeName="width" from="0" to="160" dur="1.2s" begin="0.3s" fill="freeze"/>
+  </rect>
+  <text x="460" y="128" class="num win">100%</text>
+  <text x="580" y="128" class="num">83%</text>
+  <text x="700" y="128" class="fail" fill="#fbbf24">review</text>
+
+  <rect x="48" y="152" width="784" height="44" class="row"/>
+  <text x="64" y="180" class="name">gemma:7b-instruct</text>
+  <rect x="280" y="166" width="160" height="16" class="barBg"/>
+  <rect x="280" y="166" width="120" height="16" class="bar2">
+    <animate attributeName="width" from="0" to="120" dur="1s" begin="0.8s" fill="freeze"/>
+  </rect>
+  <text x="460" y="180" class="num">75%</text>
+  <text x="580" y="180" class="num">67%</text>
+  <text x="700" y="180" class="num" fill="#f87171">hold</text>
+
+  <rect x="48" y="204" width="784" height="44" class="row"/>
+  <text x="64" y="232" class="name">mistral (candidate)</text>
+  <rect x="280" y="218" width="160" height="16" class="barBg"/>
+  <rect x="280" y="218" width="0" height="16" class="bar">
+    <animate attributeName="width" from="0" to="140" dur="1s" begin="1.3s" fill="freeze"/>
+  </rect>
+  <text x="460" y="232" class="num"></text>
+  <text x="580" y="232" class="num"></text>
+  <text x="700" y="232" class="dim" fill="#64748b">run eval</text>
+
+  <text x="48" y="300" fill="#94a3b8" font="12px system-ui">Animated bars illustrate regression testing across local Ollama models</text>
+  <text x="48" y="320" fill="#64748b" font="11px system-ui">sentinel-leaderboard --register reports/evaluation_results.json</text>
+</svg>
