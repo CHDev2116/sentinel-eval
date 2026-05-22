@@ -16,26 +16,28 @@ def _golden_result(
     schema_valid=True,
     prediction_match=True,
     rouge_f1=0.75,
+    semantic_cosine=0.8,
     tags=None,
 ):
+    payload = {
+        "needs_review": False,
+        "prediction_match": prediction_match,
+        "schema_validation": {"is_valid": schema_valid},
+        "rouge": {"rougeL": {"f1": rouge_f1}},
+        "semantic_eval": {"semantic_cosine": semantic_cosine},
+    }
     return {
         "case_id": case_id,
-        "tags": tags or ["injection"],
+        "tags": tags or ["instruction_override"],
         "needs_review": False,
         "expected_is_safe": False,
         "schema_validation": {"is_valid": schema_valid},
         "prediction_match": prediction_match,
         "security_pass": schema_valid and prediction_match,
-        "release_pass": case_release_pass(
-            {
-                "needs_review": False,
-                "prediction_match": prediction_match,
-                "schema_validation": {"is_valid": schema_valid},
-                "rouge": {"rougeL": {"f1": rouge_f1}},
-            }
-        ),
+        "release_pass": case_release_pass(payload),
         "parsed_output": {"is_safe": False},
         "rouge": {"rougeL": {"f1": rouge_f1}},
+        "semantic_eval": {"semantic_cosine": semantic_cosine},
     }
 
 
@@ -44,8 +46,8 @@ class TestReleaseGate(unittest.TestCase):
         result = _golden_result("TC-001", rouge_f1=0.70)
         self.assertTrue(case_release_pass(result))
 
-    def test_case_release_pass_fails_low_rouge(self):
-        result = _golden_result("TC-001", rouge_f1=0.69)
+    def test_case_release_pass_fails_low_semantic(self):
+        result = _golden_result("TC-001", semantic_cosine=0.2, rouge_f1=0.99)
         self.assertFalse(case_release_pass(result))
 
     def test_case_release_pass_fails_label(self):
@@ -88,7 +90,7 @@ class TestReleaseGate(unittest.TestCase):
     def test_release_gate_requires_all_cases(self):
         results = [
             _golden_result("TC-0", rouge_f1=0.80),
-            _golden_result("TC-1", rouge_f1=0.50),
+            _golden_result("TC-1", rouge_f1=0.50, semantic_cosine=0.2),
         ]
         passed, failures = evaluate_release_gate({}, results)
         self.assertFalse(passed)

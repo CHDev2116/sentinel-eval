@@ -57,3 +57,4 @@ jobs:
           cache: pip
       - run: pip install -e .
       - run: python scripts/benchmark_gate.py
+      - run: python scripts/prompt_snapshot_gate.py

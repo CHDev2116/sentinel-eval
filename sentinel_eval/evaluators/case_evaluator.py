@@ -15,6 +15,7 @@ from sentinel_eval.evaluators.calibration_evaluator import CalibrationEvaluator
 from sentinel_eval.evaluators.release_gate_evaluator import ReleaseGateEvaluator
 from sentinel_eval.evaluators.schema_evaluator import SchemaEvaluator
 from sentinel_eval.evaluators.security_evaluator import SecurityEvaluator
+from sentinel_eval.evaluators.protocol import CaseEvalContext, Evaluator
 from sentinel_eval.evaluators.semantic_evaluator import SemanticEvaluator
 from sentinel_eval.judges.ensemble import JudgeEnsemble
 from sentinel_eval.mutations.engine import apply_mutations, parse_mutation_kinds
@@ -61,6 +62,17 @@ class CaseEvaluator:
         self.calibration = calibration or CalibrationEvaluator()
         self._settings = get_settings()
 
+    @property
+    def evaluators(self) -> list[Evaluator]:
+        """Ordered evaluator chain (Protocol-compliant)."""
+        return [
+            self.semantic,
+            self.schema,
+            self.security,
+            self.release_gate,
+            self.calibration,
+        ]
+
     def evaluate(
         self,
         case: TestCase | dict[str, Any],
@@ -86,7 +98,18 @@ class CaseEvaluator:
             kinds = list(test_case.mutation_kinds)
         kinds = kinds or []
         seed = mutation_seed if mutation_seed is not None else self._settings.mutation_seed
-        mutation = apply_mutations(test_case.email_thread, kinds, seed=seed)
+        surface = test_case.surface_form or ""
+        if surface and not kinds:
+            from sentinel_eval.mutations.engine import apply_surface_form
+
+            mutation = apply_surface_form(test_case.email_thread, surface)
+        else:
+            mutation = apply_mutations(
+                test_case.email_thread,
+                kinds,
+                seed=seed,
+                surface_form=surface,
+            )
         audit_thread = mutation.mutated_thread
 
         use_ensemble = (
@@ -102,34 +125,35 @@ class CaseEvaluator:
         raw_output = _audit_raw_output(auditor, audit_thread)
         audit, clean_output = self.parser.parse(raw_output)
 
-        schema_eval = self.schema.evaluate(audit)
-        schema_result = schema_eval.validation
         reference = test_case.reference_answer or ""
         structured = self.parser.canonical_json(audit)
 
-        semantic_eval = self.semantic.evaluate(
-            reference,
-            structured,
-            clean_output,
+        ctx = CaseEvalContext(
+            case=test_case,
+            audit=audit,
+            raw_output=clean_output,
+            structured=structured,
+            reference=reference,
             rouge_l_threshold=threshold,
+            semantic_threshold=self._settings.default_semantic_threshold,
         )
+
+        semantic_eval = self.semantic.evaluate_context(ctx)
+        ctx.extra["semantic_eval"] = semantic_eval
         rouge_l_pass = semantic_eval.rouge_l_pass
 
-        security_eval = self.security.evaluate(
-            test_case,
-            audit,
-            schema_valid=schema_result.is_valid,
-            rouge_l_pass=rouge_l_pass if reference or not test_case.needs_review else None,
-        )
+        schema_eval = self.schema.evaluate_context(ctx)
+        schema_result = schema_eval.validation
+        ctx.schema_valid = schema_result.is_valid
+        ctx.extra["schema_validation"] = schema_result
 
-        release_eval = self.release_gate.evaluate(
-            schema_validation=schema_result,
-            prediction_match=security_eval.prediction_match,
-            rouge=semantic_eval.rouge,
-            needs_review=test_case.needs_review,
-        )
+        security_eval = self.security.evaluate_context(ctx)
+        ctx.extra["security_eval"] = security_eval
+        ctx.extra["prediction_match"] = security_eval.prediction_match
 
-        calibration_eval = self.calibration.evaluate(audit)
+        release_eval = self.release_gate.evaluate_context(ctx)
+
+        calibration_eval = self.calibration.evaluate_context(ctx)
 
         ensemble_eval = None
         if use_ensemble:
@@ -151,10 +175,12 @@ class CaseEvaluator:
             )
 
         mutation_meta = None
-        if kinds:
+        if kinds or mutation.surface_form or test_case.surface_form:
             mutation_meta = MutationMeta(
                 kinds_applied=mutation.kinds_applied,
                 seed=mutation.seed,
+                surface_form=mutation.surface_form or test_case.surface_form,
+                base_case_id=test_case.base_case_id or test_case.case_id,
             )
 
         if security_eval.prediction_match is not None:
@@ -164,6 +190,8 @@ class CaseEvaluator:
                 security_eval.prediction_match,
                 security_eval.security_pass,
                 semantic_eval.rouge_l_f1,
+                semantic_eval.semantic_score,
+                semantic_eval.semantic_backend,
             )
 
         return CaseEvaluationResult(

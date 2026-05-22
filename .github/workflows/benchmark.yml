@@ -17,11 +17,26 @@ jobs:
           cache: pip
       - run: pip install -e .
       - run: python scripts/benchmark_gate.py
+      - run: python scripts/prompt_snapshot_gate.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline-benchmark-fixtures
+          path: |
+            tests/fixtures/golden_regression_report.json
+            benchmarks/thresholds.json
+            benchmarks/snapshots/golden-12/expected_labels.json
 
   live-golden:
-    name: Live golden suite (Ollama)
+    name: Live golden (${{ matrix.model }})
     runs-on: ubuntu-latest
     continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        model:
+          - llama3.1:latest
+          - gemma:7b-instruct-q4_K_M
+          - mistral:latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -36,15 +51,21 @@ jobs:
           ollama serve &
           sleep 5
       - name: Pull model
-        run: ollama pull llama3.1:latest
+        run: ollama pull ${{ matrix.model }}
       - name: Run golden benchmark
-        run: sentinel-eval --all --quiet --model llama3.1:latest
+        run: sentinel-eval --all --quiet --model "${{ matrix.model }}"
+      - name: Update leaderboard
+        run: sentinel-leaderboard --register reports/evaluation_results.json
       - name: Regression gate on live report
         run: python scripts/benchmark_gate.py --report reports/latest.json
+      - name: Label snapshot gate
+        run: python scripts/prompt_snapshot_gate.py --report reports/latest.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: benchmark-report
+          name: benchmark-${{ matrix.model }}
           path: |
             reports/latest.json
             reports/evaluation_results.json
+            reports/leaderboard.json
+            benchmarks/history/index.jsonl

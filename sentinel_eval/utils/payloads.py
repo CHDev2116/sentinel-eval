@@ -28,7 +28,11 @@ _VERSION_ALIASES = {
     "mutations": PAYLOADS_ROOT / "mutations",
     "mutation": PAYLOADS_ROOT / "mutations",
     "mut": PAYLOADS_ROOT / "mutations",
+    "robust": PAYLOADS_ROOT / "mutations",
+    "robust-surfaces": PAYLOADS_ROOT / "mutations",
 }
+
+_ROBUST_CASES_FILE = "scenarios_robust_surfaces.json"
 
 
 class DatasetManifest(BaseModel):
@@ -44,6 +48,10 @@ def resolve_payload_path(payload_path: str | Path) -> Path:
     """Resolve CLI path, version alias (v2), or manifest path to a cases JSON file."""
     raw = Path(payload_path)
     key = str(payload_path).strip().lower()
+    if key in ("robust", "robust-surfaces"):
+        robust_path = _VERSION_ALIASES["robust"] / _ROBUST_CASES_FILE
+        if robust_path.is_file():
+            return robust_path
     if key in _VERSION_ALIASES:
         manifest_path = _VERSION_ALIASES[key] / "manifest.json"
         if manifest_path.is_file():

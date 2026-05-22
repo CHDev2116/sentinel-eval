@@ -83,6 +83,7 @@ class RunLineage(BaseModel):
     rubric_version: str = ""
     judge_ensemble_mode: str = ""
     mutation_kinds: list[str] = Field(default_factory=list)
+    mutation_surfaces: list[str] = Field(default_factory=list)
 
 
 class RunMeta(BaseModel):

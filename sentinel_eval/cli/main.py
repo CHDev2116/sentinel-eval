@@ -3,10 +3,11 @@ import json
 import logging
 
 from sentinel_eval.clients.lineage import build_lineage_fields
+from sentinel_eval.clients.factory import BACKENDS, create_auditor
 from sentinel_eval.clients.ollama import DEFAULT_MODEL
-from sentinel_eval.clients.ollama_auditor import create_ollama_auditor
 from sentinel_eval.clients.protocol import ModelInferenceParams
 from sentinel_eval.config import get_settings
+from sentinel_eval.config.settings import get_settings as _get_settings_fn
 from sentinel_eval.domain.models import CaseEvaluationResult
 from sentinel_eval.evaluators.case import evaluate_case
 from sentinel_eval.metrics.release_gate import (
@@ -16,7 +17,8 @@ from sentinel_eval.metrics.release_gate import (
     log_advisory_gate_report,
     log_release_gate_report,
 )
-from sentinel_eval.mutations.engine import parse_mutation_kinds
+from sentinel_eval.mutations.engine import parse_mutation_kinds, parse_surface_names
+from sentinel_eval.mutations.expand import expand_payload_cases
 from sentinel_eval.prompts.registry import get_active_prompt, set_active_prompt
 from sentinel_eval.utils.logging_config import setup_logging
 from sentinel_eval.utils.payloads import (
@@ -130,9 +132,10 @@ def parse_args():
         default=None,
         metavar="KINDS",
         help=(
-            "Comma-separated mutation kinds applied before audit: "
-            "unicode_homoglyph, markdown_nest, quoted_instruction, "
-            "multilingual_override, encoded_instruction, whitespace_smuggling."
+            "Comma-separated mutation kinds or surface aliases applied before audit: "
+            "unicode_homoglyph, markdown_nest, quoted_reply, email_footer_injection, "
+            "multilingual_rewrite, … or surface names: unicode, markdown, quoted_reply, "
+            "email_footer, multilingual."
         ),
     )
     parser.add_argument(
@@ -140,6 +143,46 @@ def parse_args():
         type=int,
         default=None,
         help="RNG seed for mutation application order.",
+    )
+    parser.add_argument(
+        "--expand-surfaces",
+        action="store_true",
+        help=(
+            "Expand each attack case into robust surface variants "
+            "(same semantic attack, different packaging)."
+        ),
+    )
+    parser.add_argument(
+        "--mutation-surfaces",
+        default=None,
+        metavar="SURFACES",
+        help=(
+            "With --expand-surfaces: comma-separated surfaces "
+            "(unicode,markdown,quoted_reply,email_footer,multilingual). "
+            "Default: all five core robust surfaces."
+        ),
+    )
+    parser.add_argument(
+        "--include-plain-surface",
+        action="store_true",
+        help="With --expand-surfaces: also run unmutated base case as surface=plain.",
+    )
+    parser.add_argument(
+        "--backend",
+        default=None,
+        choices=list(BACKENDS),
+        help="Auditor backend: ollama (default), openai, vllm, lmstudio (OpenAI-compatible HTTP).",
+    )
+    parser.add_argument(
+        "--api-base",
+        default=None,
+        help="OpenAI-compatible API base URL (e.g. http://localhost:1234/v1 for LM Studio).",
+    )
+    parser.add_argument(
+        "--semantic-backend",
+        default=None,
+        choices=["token", "embedding", "nli", "hybrid"],
+        help="Semantic alignment: token cosine, embedding, NLI, or hybrid (max).",
     )
     return parser.parse_args()
 
@@ -203,10 +246,17 @@ def main() -> int:
         else settings.model_temperature,
         seed=args.seed if args.seed is not None else settings.model_seed,
     )
-    auditor = create_ollama_auditor(
+    if args.semantic_backend:
+        import os
+
+        os.environ["SEMANTIC_BACKEND"] = args.semantic_backend
+        _get_settings_fn.cache_clear()
+    auditor = create_auditor(
         model_name,
+        backend=args.backend,
         use_cache=not args.no_cache,
         inference_params=inference,
+        api_base=args.api_base,
     )
     tag_filter = None
     if args.tags:
@@ -217,6 +267,13 @@ def main() -> int:
         include_generated=args.include_generated,
         tag_filter=tag_filter,
     )
+    if args.expand_surfaces:
+        scenarios = expand_payload_cases(
+            scenarios,
+            args.mutation_surfaces,
+            include_plain=args.include_plain_surface,
+            expand_attacks_only=True,
+        )
     total_cases = len(scenarios)
     if total_cases == 0:
         logger.warning("No cases matched filters.")
@@ -238,14 +295,18 @@ def main() -> int:
     dataset_ver = (
         dataset_manifest.dataset_version if dataset_manifest else prompt_meta.dataset_version
     )
+    expand_note = ""
+    if args.expand_surfaces:
+        expand_note = f" expand_surfaces={args.mutation_surfaces or 'default'}"
     logger.info(
-        "Batch model=%s prompt=%s dataset=%s cases=%s judges=%s mutate=%s%s",
+        "Batch model=%s prompt=%s dataset=%s cases=%s judges=%s mutate=%s%s%s",
         model_name,
         auditor.prompt_version,
         dataset_ver,
         run_count,
         args.judge_mode if args.judge_ensemble else "off",
         mutation_kinds or "off",
+        expand_note,
         limit_note,
     )
 
@@ -282,6 +343,8 @@ def main() -> int:
     )
     lineage["judge_ensemble_mode"] = args.judge_mode if args.judge_ensemble else ""
     lineage["mutation_kinds"] = mutation_kinds
+    if args.expand_surfaces:
+        lineage["mutation_surfaces"] = parse_surface_names(args.mutation_surfaces)
     report_path, metrics = write_run_report(
         results,
         model_name=model_name,

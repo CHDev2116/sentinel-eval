@@ -1,4 +1,5 @@
 from sentinel_eval.evaluators.calibration_evaluator import CalibrationEvaluator
+from sentinel_eval.evaluators.protocol import CaseEvalContext, Evaluator
 from sentinel_eval.evaluators.case import evaluate_case
 from sentinel_eval.evaluators.case_evaluator import CaseEvaluator
 from sentinel_eval.evaluators.release_gate_checker import ReleaseGate
@@ -20,4 +21,6 @@ __all__ = [
     "ReleaseGate",
     "CalibrationEvaluator",
     "RougeScorer",
+    "Evaluator",
+    "CaseEvalContext",
 ]

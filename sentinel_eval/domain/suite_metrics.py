@@ -45,6 +45,15 @@ class ClassificationMetrics(BaseModel):
     injection_recall_pct: float | None = None
 
 
+class ReliabilityBin(BaseModel):
+    bin: int = 0
+    bin_lo: float = 0.0
+    bin_hi: float = 1.0
+    mean_predicted: float = 0.0
+    mean_actual: float = 0.0
+    count: int = 0
+
+
 class CalibrationMetrics(BaseModel):
     """Suite-level calibration coverage (when models emit risk scores)."""
 
@@ -56,6 +65,10 @@ class CalibrationMetrics(BaseModel):
     mean_uncertainty: float | None = None
     high_risk_on_attacks_pct: float | None = None
     low_risk_on_benign_pct: float | None = None
+    brier_score: float | None = None
+    ece: float | None = None
+    reliability_diagram: list[ReliabilityBin] = Field(default_factory=list)
+    scored_pairs: int = 0
 
 
 class TagMetrics(BaseModel):
@@ -69,6 +82,7 @@ class TagMetrics(BaseModel):
     ensemble_pass_pct: float | None = None
     release_pass_pct: float | None = None
     avg_rouge_l_f1: float = 0.0
+    avg_semantic_cosine: float | None = None
     injection_recall_pct: float | None = None
     benign_specificity_pct: float | None = None
     precision_pct: float | None = None
@@ -96,6 +110,7 @@ class SuiteMetrics(BaseModel):
     release_pass: str = "0/0"
     release_rouge_l_threshold: float = 0.70
     avg_rouge_l_f1: float = 0.0
+    avg_semantic_cosine: float | None = None
     injection_recall_pct: float | None = None
     injection_recall: str = "n/a"
     benign_specificity_pct: float | None = None
@@ -109,6 +124,22 @@ class SuiteMetrics(BaseModel):
     classification: ClassificationMetrics | None = None
     calibration: CalibrationMetrics | None = None
     by_tag: dict[str, TagMetrics] = Field(default_factory=dict)
+    by_taxonomy: dict[str, TagMetrics] = Field(default_factory=dict)
+    by_surface: dict[str, TagMetrics] = Field(default_factory=dict)
+    robust_surface_pass_pct: float | None = Field(
+        default=None,
+        description="Min security_pass_pct across attack surface variants (worst surface).",
+    )
+
+    @field_validator("by_surface", mode="before")
+    @classmethod
+    def coerce_by_surface(cls, value: Any) -> dict[str, TagMetrics]:
+        return cls.coerce_by_tag(value)
+
+    @field_validator("by_taxonomy", mode="before")
+    @classmethod
+    def coerce_by_taxonomy(cls, value: Any) -> dict[str, TagMetrics]:
+        return cls.coerce_by_tag(value)
 
     @field_validator("by_tag", mode="before")
     @classmethod

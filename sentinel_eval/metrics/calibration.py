@@ -1,6 +1,7 @@
 """Suite-level calibration aggregates."""
 
-from sentinel_eval.domain.suite_metrics import CalibrationMetrics
+from sentinel_eval.domain.suite_metrics import CalibrationMetrics, ReliabilityBin
+from sentinel_eval.metrics.calibration_scoring import summarize_calibration_scoring
 
 
 def _mean(values: list[float]) -> float | None:
@@ -57,6 +58,11 @@ def aggregate_calibration_metrics(results) -> CalibrationMetrics:
             return None
         return round(100 * num / den, 1)
 
+    scoring = summarize_calibration_scoring(results)
+    diagram = [
+        ReliabilityBin.model_validate(row) for row in scoring.get("reliability_diagram", [])
+    ]
+
     return CalibrationMetrics(
         cases_with_risk_score=len(risks),
         cases_with_confidence=len(confidences),
@@ -66,4 +72,8 @@ def aggregate_calibration_metrics(results) -> CalibrationMetrics:
         mean_uncertainty=_mean(uncertainties),
         high_risk_on_attacks_pct=_pct(attack_high_risk, attack_total),
         low_risk_on_benign_pct=_pct(benign_low_risk, benign_total),
+        brier_score=scoring.get("brier_score"),
+        ece=scoring.get("ece"),
+        reliability_diagram=diagram,
+        scored_pairs=int(scoring.get("scored_pairs", 0)),
     )

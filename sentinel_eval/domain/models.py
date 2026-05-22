@@ -60,13 +60,20 @@ class RougeScores(BaseModel):
 
 
 class SemanticEvalResult(BaseModel):
-    """ROUGE alignment vs reference (semantic similarity)."""
+    """Semantic alignment vs reference (token cosine primary; ROUGE-L advisory)."""
 
     rouge: RougeScores = Field(default_factory=RougeScores)
     rouge_raw: RougeScores = Field(default_factory=RougeScores)
     rouge_l_f1: float = 0.0
     rouge_l_pass: bool | None = None
     rouge_l_threshold: float = 0.25
+    semantic_cosine: float = 0.0
+    semantic_pass: bool | None = None
+    semantic_threshold: float = 0.55
+    embedding_similarity: float | None = None
+    nli_entailment: float | None = None
+    semantic_score: float = 0.0
+    semantic_backend: str = "token"
 
 
 class SchemaEvalResult(BaseModel):
@@ -99,6 +106,8 @@ class ReleaseGateEvalResult(BaseModel):
 class MutationMeta(BaseModel):
     kinds_applied: list[str] = Field(default_factory=list)
     seed: int | None = None
+    surface_form: str = ""
+    base_case_id: str | None = None
 
 
 class EnsembleEvalResult(BaseModel):
@@ -135,6 +144,18 @@ class TestCase(BaseModel):
     mutation_kinds: list[str] = Field(
         default_factory=list,
         description="Per-case mutation kinds (mutation payload suite).",
+    )
+    mutation_surfaces: list[str] = Field(
+        default_factory=list,
+        description="Robust surface names (unicode, markdown, quoted_reply, …).",
+    )
+    base_case_id: str | None = Field(
+        default=None,
+        description="Logical case id before surface expansion (e.g. TC-001).",
+    )
+    surface_form: str = Field(
+        default="",
+        description="Isolated surface form for this eval row (robust mutation).",
     )
 
     @classmethod

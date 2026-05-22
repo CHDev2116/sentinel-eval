@@ -28,6 +28,7 @@ def _metric_snapshot(metrics: SuiteMetrics) -> dict:
         "false_positive_rate_pct",
         "composite_pass_pct",
         "ensemble_pass_pct",
+        "avg_semantic_cosine",
     )
     return {k: getattr(metrics, k) for k in keys if getattr(metrics, k, None) is not None}
 

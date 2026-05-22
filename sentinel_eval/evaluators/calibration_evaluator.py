@@ -1,4 +1,5 @@
 from sentinel_eval.domain.models import AuditOutput, CalibrationEvalResult
+from sentinel_eval.evaluators.protocol import CaseEvalContext
 
 
 def _clamp01(value) -> float | None:
@@ -18,6 +19,8 @@ class CalibrationEvaluator:
     Models may emit e.g. {"risk_score": 0.92, "confidence": 0.88, "uncertainty": 0.1}.
     """
 
+    evaluator_id = "calibration"
+
     def evaluate(self, audit: AuditOutput) -> CalibrationEvalResult:
         risk = _clamp01(audit.risk_score)
         confidence = _clamp01(audit.confidence)
@@ -29,3 +32,6 @@ class CalibrationEvaluator:
             uncertainty=uncertainty,
             has_calibration=has,
         )
+
+    def evaluate_context(self, ctx: CaseEvalContext) -> CalibrationEvalResult:
+        return self.evaluate(ctx.audit)

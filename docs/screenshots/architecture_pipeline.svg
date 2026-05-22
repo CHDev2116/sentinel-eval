@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="320" viewBox="0 0 920 320" role="img" aria-label="SentinelEval pipeline">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <style>
+      .box { fill:#1e3a5f; stroke:#38bdf8; stroke-width:1.5; rx:8 }
+      .boxAlt { fill:#134e4a; stroke:#2dd4bf; stroke-width:1.5; rx:8 }
+      .title { fill:#f8fafc; font:600 15px system-ui,sans-serif }
+      .label { fill:#cbd5e1; font:12px system-ui,sans-serif }
+      .arrow { stroke:#94a3b8; stroke-width:2; fill:none; marker-end:url(#m) }
+    </style>
+    <marker id="m" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="920" height="320" fill="url(#bg)"/>
+  <text x="24" y="34" class="title">SentinelEval  evaluation pipeline</text>
+  <rect x="24" y="56" width="130" height="52" class="box"/>
+  <text x="40" y="80" class="label">payloads/</text>
+  <text x="40" y="98" class="label">v2 + mutations</text>
+  <rect x="190" y="56" width="150" height="52" class="box"/>
+  <text x="206" y="80" class="label">mutation engine</text>
+  <text x="206" y="98" class="label">(optional)</text>
+  <rect x="376" y="48" width="160" height="68" class="boxAlt"/>
+  <text x="392" y="76" class="label">Ollama auditor</text>
+  <text x="392" y="94" class="label">is_safe_v2.2 / v3.0</text>
+  <text x="392" y="110" class="label">+ response cache</text>
+  <rect x="572" y="56" width="140" height="52" class="box"/>
+  <text x="588" y="80" class="label">parse + schema</text>
+  <text x="588" y="98" class="label">label match</text>
+  <rect x="748" y="56" width="148" height="52" class="box"/>
+  <text x="764" y="80" class="label">reports/</text>
+  <text x="764" y="98" class="label">+ history</text>
+  <path class="arrow" d="M154 82 H190"/>
+  <path class="arrow" d="M340 82 H376"/>
+  <path class="arrow" d="M536 82 H572"/>
+  <path class="arrow" d="M712 82 H748"/>
+  <rect x="376" y="148" width="200" height="56" class="box"/>
+  <text x="392" y="172" class="label">semantic cosine (primary)</text>
+  <text x="392" y="190" class="label">ROUGE-L (advisory)</text>
+  <rect x="376" y="224" width="200" height="56" class="box"/>
+  <text x="392" y="248" class="label">judge ensemble</text>
+  <text x="392" y="266" class="label">hidden rubric</text>
+  <rect x="612" y="224" width="200" height="56" class="boxAlt"/>
+  <text x="628" y="248" class="label">calibration</text>
+  <text x="628" y="266" class="label">Brier · ECE · diagram</text>
+  <path class="arrow" d="M652 116 V148"/>
+  <path class="arrow" d="M476 204 V224"/>
+  <path class="arrow" d="M576 252 H612"/>
+</svg>

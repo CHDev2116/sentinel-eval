@@ -26,6 +26,7 @@ class ReleaseGate:
         schema_validation: SchemaValidationResult,
         prediction_match: bool | None,
         rouge: RougeScores,
+        semantic_eval: dict | None = None,
         needs_review: bool = False,
     ) -> bool | None:
         if needs_review or prediction_match is None:
@@ -36,6 +37,7 @@ class ReleaseGate:
                 "prediction_match": prediction_match,
                 "schema_validation": schema_validation.to_dict(),
                 "rouge": rouge.to_dict(),
+                "semantic_eval": semantic_eval or {},
             },
             rouge_threshold=self.rouge_threshold,
         )

@@ -10,6 +10,7 @@ from sentinel_eval.domain.suite_metrics import (
 from sentinel_eval.metrics.calibration import aggregate_calibration_metrics
 from sentinel_eval.metrics.classification import compute_classification_metrics
 from sentinel_eval.metrics.release_gate import RELEASE_ROUGE_L_THRESHOLD
+from sentinel_eval.domain.taxonomy import ALL_TAXONOMY_TAGS
 from sentinel_eval.prompts.audit import PROMPT_VERSION
 
 
@@ -65,6 +66,11 @@ def _metrics_for_subset(results: list[dict[str, Any]]) -> dict[str, Any]:
     release_ok = sum(1 for r in release_scored if r["release_pass"])
     ensemble_ok = sum(1 for r in ensemble_scored if _ensemble_pass_value(r))
     rouge_l = [r["rouge"]["rougeL"]["f1"] for r in results if "rougeL" in r.get("rouge", {})]
+    sem_cos = []
+    for r in results:
+        sem = r.get("semantic_eval") or {}
+        if isinstance(sem, dict) and sem.get("semantic_cosine") is not None:
+            sem_cos.append(float(sem["semantic_cosine"]))
 
     n_security = len(security_scored) or n
     n_composite = len(composite_scored) or n
@@ -81,6 +87,7 @@ def _metrics_for_subset(results: list[dict[str, Any]]) -> dict[str, Any]:
         "ensemble_pass_pct": _pct(ensemble_ok, n_ensemble) if n_ensemble else None,
         "release_pass_pct": _pct(release_ok, n_release),
         "avg_rouge_l_f1": round(sum(rouge_l) / len(rouge_l), 2) if rouge_l else 0.0,
+        "avg_semantic_cosine": round(sum(sem_cos) / len(sem_cos), 2) if sem_cos else None,
         "injection_recall_pct": classification.injection_recall_pct or classification.recall_pct,
         "benign_specificity_pct": classification.benign_specificity_pct
         or classification.specificity_pct,
@@ -127,6 +134,41 @@ def aggregate_metrics(results: list[Any]) -> SuiteMetrics:
     for tag, bucket in sorted(tag_buckets.items()):
         by_tag[tag] = _subset_to_tag_metrics(_metrics_for_subset(bucket))
 
+    taxonomy_buckets: defaultdict[str, list] = defaultdict(list)
+    for r in dict_results:
+        for tag in r.get("tags") or []:
+            if tag in ALL_TAXONOMY_TAGS:
+                taxonomy_buckets[tag].append(r)
+    by_taxonomy: dict[str, TagMetrics] = {}
+    for tag, bucket in sorted(taxonomy_buckets.items()):
+        by_taxonomy[tag] = _subset_to_tag_metrics(_metrics_for_subset(bucket))
+
+    surface_buckets: defaultdict[str, list] = defaultdict(list)
+    for r in dict_results:
+        surface = ""
+        meta = r.get("mutation_meta") or {}
+        if isinstance(meta, dict):
+            surface = meta.get("surface_form") or ""
+        for tag in r.get("tags") or []:
+            if tag.startswith("surface:"):
+                surface = tag.split(":", 1)[1]
+                break
+        if surface:
+            surface_buckets[surface].append(r)
+    by_surface: dict[str, TagMetrics] = {}
+    for surface, bucket in sorted(surface_buckets.items()):
+        by_surface[surface] = _subset_to_tag_metrics(_metrics_for_subset(bucket))
+
+    robust_surface_pass_pct = None
+    attack_surface_pcts: list[float] = []
+    for surface, tm in by_surface.items():
+        if surface == "plain":
+            continue
+        if tm.security_pass_pct is not None:
+            attack_surface_pcts.append(tm.security_pass_pct)
+    if attack_surface_pcts:
+        robust_surface_pass_pct = min(attack_surface_pcts)
+
     return SuiteMetrics(
         cases_run=n,
         prompt_version=PROMPT_VERSION,
@@ -144,6 +186,7 @@ def aggregate_metrics(results: list[Any]) -> SuiteMetrics:
         release_pass=f"{release_ok}/{n_release}",
         release_rouge_l_threshold=RELEASE_ROUGE_L_THRESHOLD,
         avg_rouge_l_f1=overall["avg_rouge_l_f1"],
+        avg_semantic_cosine=overall.get("avg_semantic_cosine"),
         injection_recall_pct=overall["injection_recall_pct"],
         injection_recall=(
             f"{classification.tn}/{classification.tn + classification.fp}"
@@ -169,4 +212,7 @@ def aggregate_metrics(results: list[Any]) -> SuiteMetrics:
         classification=classification,
         calibration=aggregate_calibration_metrics(dict_results),
         by_tag=by_tag,
+        by_taxonomy=by_taxonomy,
+        by_surface=by_surface,
+        robust_surface_pass_pct=robust_surface_pass_pct,
     )

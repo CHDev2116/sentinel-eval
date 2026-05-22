@@ -6,6 +6,8 @@ from pathlib import Path
 from sentinel_eval.domain.models import CaseEvaluationResult
 from sentinel_eval.domain.report import RunLineage, RunMeta, RunReport
 from sentinel_eval.domain.suite_metrics import SuiteMetrics
+from sentinel_eval.benchmark.history import append_run_history
+from sentinel_eval.config import get_settings
 from sentinel_eval.metrics.aggregation import aggregate_metrics
 from sentinel_eval.metrics.classification import log_classification_report
 from sentinel_eval.prompts.audit import PROMPT_VERSION
@@ -63,6 +65,24 @@ def write_run_report(
     for path in paths:
         report.write_json(path)
 
+    append_run_history(
+        metrics=report.metrics,
+        model=model_name,
+        payload=payload_path,
+        report_path=paths[0],
+        extra={"full_suite": full_suite},
+    )
+
+    if get_settings().write_reliability_chart:
+        from sentinel_eval.reporting.reliability_chart import write_reliability_chart
+
+        chart_path = write_reliability_chart(
+            report.metrics.calibration,
+            os.path.join("reports", "calibration_reliability.svg"),
+        )
+        if chart_path:
+            logger.info("Reliability diagram: %s", chart_path)
+
     return paths[0], report.metrics
 
 
@@ -103,12 +123,13 @@ def log_metrics_summary(metrics: SuiteMetrics, model_name: str) -> None:
             metrics.ensemble_pass_pct,
         )
     logger.info(
-        "Release pass: %s (%s%%, rougeL>=%s)",
+        "Release pass: %s (%s%%)",
         metrics.release_pass,
         metrics.release_pass_pct,
-        metrics.release_rouge_l_threshold,
     )
-    logger.info("Avg ROUGE-L (struct): %s", metrics.avg_rouge_l_f1)
+    if metrics.avg_semantic_cosine is not None:
+        logger.info("Avg semantic cosine (primary): %s", metrics.avg_semantic_cosine)
+    logger.info("Avg ROUGE-L (advisory): %s", metrics.avg_rouge_l_f1)
     logger.info(
         "Injection recall: %s (%s%%)",
         metrics.injection_recall,
@@ -135,6 +156,13 @@ def log_metrics_summary(metrics: SuiteMetrics, model_name: str) -> None:
             cal.mean_risk_score,
             cal.high_risk_on_attacks_pct,
         )
+        if cal.brier_score is not None:
+            logger.info(
+                "Calibration scoring: Brier=%s ECE=%s (pairs=%s)",
+                cal.brier_score,
+                cal.ece,
+                cal.scored_pairs,
+            )
     for tag, m in metrics.by_tag.items():
         logger.info(
             "Tag %s: security=%s%% label=%s%% n=%s",

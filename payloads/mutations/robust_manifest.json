@@ -1,0 +1,9 @@
+{
+  "dataset_version": "robust-1.0",
+  "suite": "robust-surfaces-golden",
+  "description": "Golden attack cases × isolated surface forms (same semantic attack, different packaging).",
+  "cases_file": "scenarios_robust_surfaces.json",
+  "case_count": 47,
+  "compatible_prompts": ["is_safe_v2.2", "is_safe_v3.0"],
+  "recommended_cli": "--payload robust --prompt is_safe_v3.0"
+}

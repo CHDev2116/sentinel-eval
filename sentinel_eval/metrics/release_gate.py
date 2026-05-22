@@ -16,20 +16,47 @@ ADVISORY_GATE_THRESHOLDS = {
 }
 
 
-def case_release_pass(result, rouge_threshold=RELEASE_ROUGE_L_THRESHOLD):
+def case_release_pass(
+    result,
+    rouge_threshold=RELEASE_ROUGE_L_THRESHOLD,
+    *,
+    semantic_threshold: float | None = None,
+    use_semantic: bool = True,
+):
     """
-    Per-case release gate (README Release Gate Policy):
-    schema valid, label match, and rougeL.f1 >= rouge_threshold.
+    Per-case release gate: schema + label + semantic alignment.
+
+    Primary alignment is token-cosine on structured JSON (see semantic_eval);
+    ROUGE-L is retained as a diagnostic when semantic is unavailable.
     """
+    from sentinel_eval.config import get_settings
+
     if result.get("needs_review") or result.get("prediction_match") is None:
         return None
-    rouge_f1 = (result.get("rouge") or {}).get("rougeL", {}).get("f1")
-    if rouge_f1 is None:
-        return False
+    settings = get_settings()
+    sem_thresh = (
+        semantic_threshold
+        if semantic_threshold is not None
+        else settings.release_semantic_threshold
+    )
+    use_sem = use_semantic and settings.use_semantic_release_gate
+
+    sem_block = result.get("semantic_eval") or {}
+    semantic_score = sem_block.get("semantic_score")
+    if semantic_score is None:
+        semantic_score = sem_block.get("semantic_cosine")
+    if use_sem and semantic_score is not None:
+        alignment_ok = float(semantic_score) >= sem_thresh
+    else:
+        rouge_f1 = (result.get("rouge") or {}).get("rougeL", {}).get("f1")
+        if rouge_f1 is None:
+            return False
+        alignment_ok = rouge_f1 >= rouge_threshold
+
     return (
         result["schema_validation"]["is_valid"]
         and result["prediction_match"] is True
-        and rouge_f1 >= rouge_threshold
+        and alignment_ok
     )
 
 

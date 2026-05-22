@@ -1,10 +1,26 @@
 # Changelog
 
+## v0.12.0
+
+- **Multi-backend auditors**: `create_auditor()` with `ollama`, `openai`, `vllm`, `lmstudio` (OpenAI-compatible HTTP).
+- **Semantic backends**: `token`, `embedding`, `nli`, `hybrid` via optional `[semantic]` extra (sentence-transformers).
+- **Reliability diagram**: auto-write `reports/calibration_reliability.svg` after each run.
+- **Evaluator Protocol**: `CaseEvalContext` + `Evaluator` protocol; all core evaluators implement `evaluate_context()`.
+
+## v0.11.0
+
+- **Calibration scoring**: Brier score, ECE, reliability diagram in `meta.metrics.calibration`.
+- **Attack taxonomy**: fine-grained golden tags (`instruction_override`, `format_attack`, …); dataset **v2.2**.
+- **Semantic primary**: token-cosine alignment for composite/release; ROUGE-L advisory.
+- **Temporal tracking**: `benchmarks/history/index.jsonl` appended each run.
+- **CI**: label snapshot gate, benchmark artifacts, nightly model matrix (llama3.1 / gemma / mistral).
+
 ## v0.10.0
 
 - **Adversarial eval**: `is_safe_v3.0` operational triage prompt; hidden rubric (`prompts/rubric.py`).
 - **Judge ensemble**: security / reasoning / calibration judges with weighted voting (`--judge-ensemble`).
 - **Mutation engine** + **`payloads/mutations/`** suite (`mut-1.0`, per-case `mutation_kinds`).
+- **Robust surface expansion** (`--expand-surfaces`, `--payload robust`): TC-001 → unicode / markdown / quoted_reply / email_footer / multilingual variants; `by_surface` + `robust_surface_pass_pct` in reports.
 - **Metrics**: `ensemble_pass_pct` in `SuiteMetrics` and reports.
 
 ## v0.9.0
