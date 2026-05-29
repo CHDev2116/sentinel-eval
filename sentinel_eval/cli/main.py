@@ -184,6 +184,11 @@ def parse_args():
         choices=["token", "embedding", "nli", "hybrid"],
         help="Semantic alignment: token cosine, embedding, NLI, or hybrid (max).",
     )
+    parser.add_argument(
+        "--target-agent",
+        default="unknown",
+        help="Target agent identifier written into report meta.target_agent.",
+    )
     return parser.parse_args()
 
 
@@ -353,6 +358,7 @@ def main() -> int:
         extra_meta={
             "include_generated": args.include_generated,
             "tag_filter": tag_filter,
+            "target_agent": args.target_agent,
             "lineage": lineage,
         },
     )

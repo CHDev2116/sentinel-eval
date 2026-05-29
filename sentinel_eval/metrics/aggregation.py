@@ -7,6 +7,7 @@ from sentinel_eval.domain.suite_metrics import (
     SuiteMetrics,
     TagMetrics,
 )
+from sentinel_eval.metrics.adversarial_matrix import compute_adversarial_matrix_metrics
 from sentinel_eval.metrics.calibration import aggregate_calibration_metrics
 from sentinel_eval.metrics.classification import compute_classification_metrics
 from sentinel_eval.metrics.release_gate import RELEASE_ROUGE_L_THRESHOLD
@@ -211,6 +212,7 @@ def aggregate_metrics(results: list[Any]) -> SuiteMetrics:
         false_positive_rate=classification.false_positive_rate,
         classification=classification,
         calibration=aggregate_calibration_metrics(dict_results),
+        adversarial_matrix=compute_adversarial_matrix_metrics(dict_results),
         by_tag=by_tag,
         by_taxonomy=by_taxonomy,
         by_surface=by_surface,

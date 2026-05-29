@@ -76,6 +76,7 @@ class TestRunReport(unittest.TestCase):
             model_name="m",
             payload_path="p",
             full_suite=False,
+            extra_meta={"target_agent": "tri_agent_v2"},
         )
         with tempfile.TemporaryDirectory() as tmp:
             path = f"{tmp}/run.json"
@@ -85,6 +86,10 @@ class TestRunReport(unittest.TestCase):
         self.assertIn("meta", data)
         self.assertIn("results", data)
         self.assertEqual(data["results"][0]["case_id"], "TC-1")
+        self.assertEqual(data["meta"]["evaluator_model"], "m")
+        self.assertEqual(data["meta"]["target_agent"], "tri_agent_v2")
+        self.assertIn("security_metrics", data["results"][0])
+        self.assertEqual(data["results"][0]["test_case_id"], "TC-1")
 
 
 if __name__ == "__main__":

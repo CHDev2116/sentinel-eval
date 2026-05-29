@@ -71,6 +71,48 @@ class CalibrationMetrics(BaseModel):
     scored_pairs: int = 0
 
 
+class IngressMetrics(BaseModel):
+    """Input-side defenses: prompt-injection/jailbreak blocking quality."""
+
+    attack_cases: int = 0
+    benign_cases: int = 0
+    blocked_attacks: int = 0
+    false_positives: int = 0
+    true_positive_rate: float | None = None
+    false_positive_rate: float | None = None
+    refusal_rate_on_attacks: float | None = None
+    indirect_injection_immunity_rate: float | None = None
+
+
+class EgressMetrics(BaseModel):
+    """Output-side leakage and unsafe action prevention quality."""
+
+    cases_checked: int = 0
+    pii_leak_detected: int = 0
+    secrets_leak_detected: int = 0
+    privilege_escalation_blocked: int = 0
+    privilege_escalation_attempts: int = 0
+    leak_free_rate: float | None = None
+    privilege_escalation_block_rate: float | None = None
+
+
+class RedTeamAutomationMetrics(BaseModel):
+    """Automated red-team throughput and effectiveness."""
+
+    generated_attacks: int = 0
+    successful_attacks: int = 0
+    attack_success_rate: float | None = None
+    unique_attack_patterns: int = 0
+
+
+class AdversarialMatrixMetrics(BaseModel):
+    """Three-dimensional adversarial evaluation matrix summary."""
+
+    ingress: IngressMetrics = Field(default_factory=IngressMetrics)
+    egress: EgressMetrics = Field(default_factory=EgressMetrics)
+    red_team: RedTeamAutomationMetrics = Field(default_factory=RedTeamAutomationMetrics)
+
+
 class TagMetrics(BaseModel):
     """Per-tag subset (subset of suite fields)."""
 
@@ -123,6 +165,7 @@ class SuiteMetrics(BaseModel):
     false_positive_rate: float | None = None
     classification: ClassificationMetrics | None = None
     calibration: CalibrationMetrics | None = None
+    adversarial_matrix: AdversarialMatrixMetrics | None = None
     by_tag: dict[str, TagMetrics] = Field(default_factory=dict)
     by_taxonomy: dict[str, TagMetrics] = Field(default_factory=dict)
     by_surface: dict[str, TagMetrics] = Field(default_factory=dict)
@@ -180,6 +223,17 @@ class SuiteMetrics(BaseModel):
             return value
         if isinstance(value, dict):
             return ClassificationMetrics.model_validate(value)
+        return None
+
+    @field_validator("adversarial_matrix", mode="before")
+    @classmethod
+    def coerce_adversarial_matrix(cls, value: Any) -> AdversarialMatrixMetrics | None:
+        if value is None:
+            return None
+        if isinstance(value, AdversarialMatrixMetrics):
+            return value
+        if isinstance(value, dict):
+            return AdversarialMatrixMetrics.model_validate(value)
         return None
 
     def to_dict(self) -> dict[str, Any]:

@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     judge_ensemble_mode: str = "heuristic"
     mutation_kinds: str = ""
     mutation_seed: int | None = None
+    threat_intel_events_path: str = "reports/threat_intel/events.jsonl"
+    threat_intel_latest_path: str = "reports/threat_latest.jsonl"
+    threat_intel_environment: str = "production"
 
 
 @lru_cache

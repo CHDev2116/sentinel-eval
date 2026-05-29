@@ -8,6 +8,8 @@ from sentinel_eval.domain.models import AuditOutput, CaseEvaluationResult, TestC
 from sentinel_eval.domain.report import RunLineage, RunMeta, RunReport
 from sentinel_eval.evaluators.case import evaluate_case
 from sentinel_eval.evaluators.case_evaluator import CaseEvaluator
+from sentinel_eval.guard import sentinel_guard
+from sentinel_eval.guard.exceptions import SentinelGuardBlocked
 from sentinel_eval.prompts.audit import PROMPT_VERSION, build_audit_prompt
 
 __all__ = [
@@ -28,4 +30,6 @@ __all__ = [
     "CaseEvaluator",
     "PROMPT_VERSION",
     "build_audit_prompt",
+    "sentinel_guard",
+    "SentinelGuardBlocked",
 ]

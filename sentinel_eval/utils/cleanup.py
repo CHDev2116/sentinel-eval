@@ -49,6 +49,7 @@ def main():
         (REPORTS_DIR / "runs", ".json"),
         (REPORTS_DIR / "generated_runs", ".json"),
         (REPORTS_DIR / "async_runs", ".jsonl"),
+        (REPORTS_DIR / "threat_intel", ".jsonl"),
     ]
 
     print(f"🧹 Cleanup started (keep={keep}, dry_run={dry_run})")

@@ -7,6 +7,8 @@ reports/runs/
 reports/generated_runs/
 reports/async_runs/
 reports/async_latest.jsonl
+reports/threat_intel/
+reports/threat_latest.jsonl
 reports/latest.json
 reports/evaluation_results.json
 
